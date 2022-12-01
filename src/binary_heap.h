@@ -33,14 +33,14 @@ public:
 	T pop()
 	{
 		auto result = data.front();
-		std::pop_heap(data.begin(), data.end(), ComparatorT());
+		std::pop_heap(begin(), end(), ComparatorT());
 		data.pop_back();
 		return result;
 	}
 
-	void remove(T& Value)
+	void remove(T & Value)
 	{
-		int index = data.FindIndex(Value);
+		int index = std::find(begin(), end(), Value) - begin();
 		if (index >= 0)
 		{
 			int last_index = data.size() - 1;
@@ -51,10 +51,10 @@ public:
 			else
 			{
 				std::swap(data[index], data[last_index]);
-				data.RemoveTail();
+				data.pop_back();
 
-				HeapifyUp(index);
-				HeapifyDown(index);
+				heapify_up(index);
+				heapify_down(index);
 			}
 		}
 	}
@@ -82,13 +82,13 @@ private:
 	void heapify_down(int index)
 	{
 		int left_index = index * 2 + 1;
-		if (left_index >= data.GetSize())
+		if (left_index >= data.size())
 		{
 			return;
 		}
 
 		int right_index = index * 2 + 2;
-		int best_child_index = (right_index < data.GetSize() && is_higher_priority(right_index, left_index)) ? right_index : left_index;
+		int best_child_index = (right_index < data.size() && is_higher_priority(right_index, left_index)) ? right_index : left_index;
 		if (is_higher_priority(best_child_index, index))
 		{
 			std::swap(data[index], data[best_child_index]);
