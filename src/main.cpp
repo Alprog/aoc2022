@@ -6,22 +6,35 @@
 #include <type_traits>
 
 constexpr int puzzle_count = 1;
+constexpr int part_count = 2;
+
 constexpr int active_puzzle_index = 1;
 
-template<int... indicies>
-auto& get_puzzle_entry_points(std::integer_sequence<int, indicies...> sequence)
+template <int>
+struct day_index {};
+
+template<int Day, int... Parts>
+auto& get_part_functions(day_index<Day>, std::integer_sequence<int, Parts...> part_sequence)
 {
-	static std::vector<puzzle_entry_point> entry_points = { puzzle<indicies + 1>::run... };
-	return entry_points;
+	static std::vector<puzzle_entry_point> part_functions = { puzzle<Day + 1, Parts + 1>::run... };
+	return part_functions;
 }
 
-puzzle_entry_point get_puzzle_entry_point(int index)
+template<int... Days>
+auto& get_puzzle_functions(std::integer_sequence<int, Days...> day_sequence)
 {
-	auto sequence = std::make_integer_sequence<int, puzzle_count>{};
-	return get_puzzle_entry_points(sequence)[--index];
+	constexpr auto part_sequence = std::make_integer_sequence<int, part_count>{};
+	static std::vector<puzzle_entry_point*> puzzle_functions = { &get_part_functions(day_index<Days>{}, part_sequence)[0]...};
+	return puzzle_functions;
 }
 
-void run_puzzle(int index)
+puzzle_entry_point get_puzzle_entry_point(int day, int part)
+{
+	constexpr auto day_sequence = std::make_integer_sequence<int, puzzle_count>{};
+	return get_puzzle_functions(day_sequence)[day - 1][part - 1];
+}
+
+void run_puzzle(int day)
 {
 	std::vector<std::string> lines;
 
@@ -34,7 +47,10 @@ void run_puzzle(int index)
 		lines.push_back(line);
 	}
 
-	get_puzzle_entry_point(index)(lines);
+	for (int part = 1; part <= part_count; part++)
+	{
+		get_puzzle_entry_point(day, part)(lines);
+	}
 }
 
 int main()
