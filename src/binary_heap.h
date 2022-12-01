@@ -17,13 +17,13 @@ public:
 	void push(T& Value)
 	{
 		data.push_back(Value);
-		std::push_heap(data.AccessIterStart(), data.AccessIterEnd(), ComparatorT());
+		std::push_heap(data.begin(), data.end(), ComparatorT());
 	}
 
 	void push(T&& Value)
 	{
 		data.push_back(Value);
-		std::push_heap(data.AccessIterStart(), data.AccessIterEnd(), ComparatorT());
+		std::push_heap(data.begin(), data.end(), ComparatorT());
 	}
 
 	void push_without_heapify(T&& Value) { data.push_back(std::move(Value)); }
@@ -33,7 +33,7 @@ public:
 	T pop()
 	{
 		auto result = data.front();
-		std::pop_heap(data.AccessIterStart(), data.AccessIterEnd(), ComparatorT());
+		std::pop_heap(data.begin(), data.end(), ComparatorT());
 		data.pop_back();
 		return result;
 	}
