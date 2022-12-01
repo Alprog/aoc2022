@@ -14,15 +14,15 @@ public:
 
 	void make_heap() { std::make_heap(data.begin(), data.end(), ComparatorT()); }
 
-	void push(T& Value)
+	void push(T& value)
 	{
-		data.push_back(Value);
+		data.push_back(value);
 		std::push_heap(data.begin(), data.end(), ComparatorT());
 	}
 
-	void push(T&& Value)
+	void push(T&& value)
 	{
-		data.push_back(Value);
+		data.push_back(value);
 		std::push_heap(data.begin(), data.end(), ComparatorT());
 	}
 
@@ -38,9 +38,9 @@ public:
 		return result;
 	}
 
-	void remove(T & Value)
+	void remove(T& value)
 	{
-		int index = std::find(begin(), end(), Value) - begin();
+		int index = std::find(begin(), end(), value) - begin();
 		if (index >= 0)
 		{
 			int last_index = data.size() - 1;
