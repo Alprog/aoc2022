@@ -1,5 +1,6 @@
 
 #include "puzzles.h"
+#include "binary_heap.h"
 
 void puzzle<1>::run(std::vector<std::string>& lines)
 {
