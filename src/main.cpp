@@ -5,10 +5,10 @@
 #include <format>
 #include <type_traits>
 
-constexpr int puzzle_count = 1;
+constexpr int puzzle_count = 2;
 constexpr int part_count = 2;
 
-constexpr int active_puzzle_index = 1;
+constexpr int active_puzzle_index = 2;
 
 template <int>
 struct day_index {};

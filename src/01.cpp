@@ -45,5 +45,5 @@ void puzzle<1, 2>::run(std::vector<std::string>& lines)
 	}
 
 	auto result = heap.pop() + heap.pop() + heap.pop();
-	std::cout << result << "\n";;
+	std::cout << result << "\n";
 }
