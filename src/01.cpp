@@ -1,4 +1,3 @@
-
 #include "puzzles.h"
 #include "binary_heap.h"
 

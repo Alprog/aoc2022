@@ -1,4 +1,3 @@
-
 #include "puzzles.h"
 
 #include <fstream>
