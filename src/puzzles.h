@@ -8,7 +8,7 @@
 
 using puzzle_entry_point = void(*)(std::vector<std::string>&);
 
-template<int Index, int Part>
+template<int Day, int Part>
 class puzzle
 {
 public:
