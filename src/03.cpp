@@ -1,5 +1,7 @@
 #include "puzzles.h"
 
+#include "string_utils.h"
+
 void puzzle<3, 1>::run(std::vector<std::string>& lines)
 {
 	auto total = 0;
@@ -12,8 +14,7 @@ void puzzle<3, 1>::run(std::vector<std::string>& lines)
 		for (int i = 0; i < half_size; i++)
 		{
 			char c = line[i];
-
-			if (line.find(c, half_size) != std::string::npos)
+			if (str_utils::contains(line, c, half_size))
 			{
 				if (c >= 'A' && c <= 'Z')
 				{
@@ -41,16 +42,16 @@ void puzzle<3, 2>::run(std::vector<std::string>& lines)
 	auto index = 0;
 	while (index < lines.size())
 	{
-		auto line = lines[index++];
-		auto lineA = lines[index++];
-		auto lineB = lines[index++];
+		auto& line = lines[index++];
+		auto& lineA = lines[index++];
+		auto& lineB = lines[index++];
 
 		auto size = line.size();
 		for (int i = 0; i < size; i++)
 		{
 			char c = line[i];
 
-			if (lineA.find(c) != std::string::npos && lineB.find(c) != std::string::npos)
+			if (str_utils::contains(lineA, c) && str_utils::contains(lineB, c))
 			{
 				if (c >= 'A' && c <= 'Z')
 				{
