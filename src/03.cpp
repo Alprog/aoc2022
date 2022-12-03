@@ -13,7 +13,7 @@ void puzzle<3, 1>::run(std::vector<std::string>& lines)
 		{
 			char c = line[i];
 
-			if (std::find(line.begin() + half_size, line.end(), c) != line.end())
+			if (line.find(c, half_size) != std::string::npos)
 			{
 				if (c >= 'A' && c <= 'Z')
 				{
@@ -38,33 +38,30 @@ void puzzle<3, 2>::run(std::vector<std::string>& lines)
 {
 	auto total = 0;
 
-	for (int j = 0; j < lines.size(); j += 3)
+	auto index = 0;
+	while (index < lines.size())
 	{
-		auto line = lines[j];
-		auto size = line.size();
+		auto line = lines[index++];
+		auto lineA = lines[index++];
+		auto lineB = lines[index++];
 
+		auto size = line.size();
 		for (int i = 0; i < size; i++)
 		{
 			char c = line[i];
 
-			auto lineA = lines[j + 1];
-			auto lineB = lines[j + 2];
-
-			if (std::find(lineA.begin(), lineA.end(), c) != lineA.end())
+			if (lineA.find(c) != std::string::npos && lineB.find(c) != std::string::npos)
 			{
-				if (std::find(lineB.begin(), lineB.end(), c) != lineB.end())
+				if (c >= 'A' && c <= 'Z')
 				{
-					if (c >= 'A' && c <= 'Z')
-					{
-						total += c - 'A' + 27;
-					}
-					else
-					{
-						total += c - 'a' + 1;
-					}
-
-					break;
+					total += c - 'A' + 27;
 				}
+				else
+				{
+					total += c - 'a' + 1;
+				}
+
+				break;
 			}
 
 		}
