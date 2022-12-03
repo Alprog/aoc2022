@@ -37,7 +37,7 @@ void run_puzzle(int day)
 {
 	std::vector<std::string> lines;
 
-	std::string input_file_name = std::format("input/{:02}.txt", active_puzzle_index);
+	std::string input_file_name = std::format("input/{:02}.txt", day);
 
 	std::ifstream file(input_file_name);
 	std::string line;

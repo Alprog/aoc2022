@@ -25,8 +25,6 @@ void puzzle<1, 1>::run(std::vector<std::string>& lines)
 
 void puzzle<1, 2>::run(std::vector<std::string>& lines)
 {
-	lines.push_back("");
-
 	binary_heap_max<int> heap;
 
 	int cur = 0;
