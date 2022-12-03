@@ -47,10 +47,8 @@ void puzzle<3, 2>::run(std::vector<std::string>& lines)
 		auto& lineB = lines[index++];
 
 		auto size = line.size();
-		for (int i = 0; i < size; i++)
+		for (char c : line)
 		{
-			char c = line[i];
-
 			if (str_utils::contains(lineA, c) && str_utils::contains(lineB, c))
 			{
 				if (c >= 'A' && c <= 'Z')
