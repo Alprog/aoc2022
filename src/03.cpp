@@ -2,11 +2,11 @@
 
 #include "string_utils.h"
 
-void puzzle<3, 1>::run(std::vector<std::string>& lines)
+puzzle<3, 1> X = [](input& input)
 {
 	auto total = 0;
 
-	for (auto& line : lines)
+	for (auto& line : input.lines)
 	{
 		auto size = line.size();
 		auto half_size = size / 2;
@@ -24,27 +24,27 @@ void puzzle<3, 1>::run(std::vector<std::string>& lines)
 				{
 					total += c - 'a' + 1;
 				}
-				
+
 				break;
 			}
-			
+
 		}
 
 	}
 
 	std::cout << total << "\n";
-}
+};
 
-void puzzle<3, 2>::run(std::vector<std::string>& lines)
+puzzle<3, 2> X = [](input& input)
 {
 	auto total = 0;
 
 	auto index = 0;
-	while (index < lines.size())
+	while (index < input.lines.size())
 	{
-		auto& line = lines[index++];
-		auto& lineA = lines[index++];
-		auto& lineB = lines[index++];
+		auto& line = input.lines[index++];
+		auto& lineA = input.lines[index++];
+		auto& lineB = input.lines[index++];
 
 		auto size = line.size();
 		for (char c : line)
@@ -67,4 +67,4 @@ void puzzle<3, 2>::run(std::vector<std::string>& lines)
 	}
 
 	std::cout << total << "\n";
-}
+};

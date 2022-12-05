@@ -2,14 +2,14 @@
 
 #include "string_utils.h"
 
-void puzzle<4, 1>::run(std::vector<std::string>& lines)
+puzzle<4, 1> X = [](input& input)
 {
 	auto total = 0;
 
 	const int arg_count = 4;
 
 	int arg[arg_count];
-	for (auto& line : lines)
+	for (auto& line : input.lines)
 	{
 		str_utils::replace_all(line, ",", "-");
 		auto arr = str_utils::split(line, "-");
@@ -27,16 +27,16 @@ void puzzle<4, 1>::run(std::vector<std::string>& lines)
 	}
 
 	std::cout << total << "\n";
-}
+};
 
-void puzzle<4, 2>::run(std::vector<std::string>& lines)
+puzzle<4, 2> X = [](input& input)
 {
 	auto total = 0;
 
 	const int arg_count = 4;
 
 	int arg[arg_count];
-	for (auto& line : lines)
+	for (auto& line : input.lines)
 	{
 		str_utils::replace_all(line, ",", "-");
 		auto arr = str_utils::split(line, "-");
@@ -54,4 +54,4 @@ void puzzle<4, 2>::run(std::vector<std::string>& lines)
 	}
 
 	std::cout << total << "\n";
-}
+};

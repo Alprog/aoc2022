@@ -1,9 +1,9 @@
 #include "puzzles.h"
 
-void puzzle<2, 1>::run(std::vector<std::string>& lines)
+puzzle<2, 1> X = [](input& input)
 {
 	auto score = 0;
-	for (auto& line : lines)
+	for (auto& line : input.lines)
 	{
 		auto enemy = line[0] - 'A';
 		auto my = line[2] - 'X';
@@ -14,12 +14,12 @@ void puzzle<2, 1>::run(std::vector<std::string>& lines)
 
 	}
 	std::cout << score << "\n";
-}
+};
 
-void puzzle<2, 2>::run(std::vector<std::string>& lines)
+puzzle<2, 1> X = [](input& input)
 {
 	auto score = 0;
-	for (auto& line : lines)
+	for (auto& line : input.lines)
 	{
 		auto enemy = line[0] - 'A';
 		auto result = line[2] - 'X';
@@ -30,4 +30,4 @@ void puzzle<2, 2>::run(std::vector<std::string>& lines)
 
 	}
 	std::cout << score << "\n";
-}
+};

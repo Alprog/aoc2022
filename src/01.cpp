@@ -1,13 +1,13 @@
 #include "puzzles.h"
 #include "binary_heap.h"
 
-void puzzle<1, 1>::run(std::vector<std::string>& lines)
+puzzle<1, 1> X = [](input& input)
 {
-	lines.push_back("");
+	input.lines.push_back("");
 
 	int max = 0;
 	int cur = 0;
-	for (auto& line : lines)
+	for (auto& line : input.lines)
 	{
 		if (!line.empty())
 		{
@@ -21,14 +21,14 @@ void puzzle<1, 1>::run(std::vector<std::string>& lines)
 	}
 
 	std::cout << max << "\n";
-}
+};
 
-void puzzle<1, 2>::run(std::vector<std::string>& lines)
+puzzle<1, 2> X = [](input& input)
 {
 	binary_heap_max<int> heap;
 
 	int cur = 0;
-	for (auto& line : lines)
+	for (auto& line : input.lines)
 	{
 		if (!line.empty())
 		{
@@ -43,4 +43,4 @@ void puzzle<1, 2>::run(std::vector<std::string>& lines)
 
 	auto result = heap.pop() + heap.pop() + heap.pop();
 	std::cout << result << "\n";
-}
+};

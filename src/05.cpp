@@ -76,12 +76,12 @@ void solve(std::vector<std::string>& lines, bool is_part_one)
 	std::cout << result << "\n";
 }
 
-void puzzle<5, 1>::run(std::vector<std::string>& lines)
-{
-	solve(lines, true);
-}
-
-void puzzle<5, 2>::run(std::vector<std::string>& lines)
-{
-	solve(lines, false);
-}
+//void puzzle<5, 1>::run(std::vector<std::string>& lines)
+//{
+//	solve(lines, true);
+//}
+//
+//void puzzle<5, 2>::run(std::vector<std::string>& lines)
+//{
+//	solve(lines, false);
+//}
