@@ -8,7 +8,7 @@ void do_move(stacks& stacks, int move, int from, int to)
 {
 	for (int i = 0; i < move; i++)
 	{
-		char c = stacks[from].at(stacks[from].size() - 1);
+		char c = stacks[from].back();
 		stacks[from].pop_back();
 		stacks[to].emplace_back(c);
 	}
@@ -18,12 +18,9 @@ void do_move_multiply(stacks& stacks, int move, int from, int to)
 {
 	auto& stack_from = stacks[from];
 	auto& stack_to = stacks[to];
-
+	
 	auto start = stack_from.size() - move;
-	for (int i = 0; i < move; i++)
-	{
-		stack_to.emplace_back(stack_from[start + i]);
-	}
+	stack_to.insert(stack_to.end(), stack_from.begin() + start, stack_from.end());
 	stack_from.resize(start);
 }
 
@@ -40,22 +37,22 @@ void solve(std::vector<std::string>& lines, bool is_part_one)
 	stacks stacks;
 	stacks.resize(stack_count);
 
-	for (int i = empty_line_index - 2; i >= 0; i--)
+	for (int index = empty_line_index - 2; index >= 0; index--)
 	{
-		auto line = lines[i];
-		for (int j = 0; j < stack_count; j++)
+		auto line = lines[index];
+		for (int i = 0; i < stack_count; i++)
 		{
-			char c = line[1 + 4 * j];
+			char c = line[1 + 4 * i];
 			if (c != ' ')
 			{
-				stacks[j].emplace_back(c);
+				stacks[i].emplace_back(c);
 			}
 		}
 	}
 
-	for (int i = empty_line_index + 1; i < lines.size(); i++)
+	for (int index = empty_line_index + 1; index < lines.size(); index++)
 	{
-		auto arr = str_utils::split(lines[i], " ");
+		auto arr = str_utils::split(lines[index], " ");
 		auto move = std::atoi(arr[1].c_str());
 		auto from = std::atoi(arr[3].c_str()) - 1;
 		auto to = std::atoi(arr[5].c_str()) - 1;
@@ -71,9 +68,9 @@ void solve(std::vector<std::string>& lines, bool is_part_one)
 
 
 	std::string result;
-	for (int j = 0; j < stack_count; j++)
+	for (int i = 0; i < stack_count; i++)
 	{
-		result += stacks[j][stacks[j].size() - 1];
+		result += stacks[i].back();
 	}
 	std::cout << result << "\n";
 }
