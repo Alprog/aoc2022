@@ -2,26 +2,24 @@
 
 #include "string_utils.h"
 
+using stack = std::vector<char>;
 using stacks = std::vector<std::vector<char>>;
 
-void do_move(stacks& stacks, int move, int from, int to)
+void do_move(stack& src, stack& dst, int count)
 {
-	for (int i = 0; i < move; i++)
+	for (int i = 0; i < count; i++)
 	{
-		char c = stacks[from].back();
-		stacks[from].pop_back();
-		stacks[to].emplace_back(c);
+		char c = src.back();
+		src.pop_back();
+		dst.emplace_back(c);
 	}
 }
 
-void do_move_multiply(stacks& stacks, int move, int from, int to)
+void do_move_multiply(stack& src, stack& dst, int count)
 {
-	auto& stack_from = stacks[from];
-	auto& stack_to = stacks[to];
-	
-	auto start = stack_from.size() - move;
-	stack_to.insert(stack_to.end(), stack_from.begin() + start, stack_from.end());
-	stack_from.resize(start);
+	auto start = src.size() - count;
+	dst.insert(dst.end(), src.begin() + start, src.end());
+	src.resize(start);
 }
 
 void solve(std::vector<std::string>& lines, bool is_part_one)
@@ -53,24 +51,27 @@ void solve(std::vector<std::string>& lines, bool is_part_one)
 	for (int index = empty_line_index + 1; index < lines.size(); index++)
 	{
 		auto arr = str_utils::split(lines[index], " ");
-		auto move = std::atoi(arr[1].c_str());
+		auto move_count = std::atoi(arr[1].c_str());
 		auto from = std::atoi(arr[3].c_str()) - 1;
 		auto to = std::atoi(arr[5].c_str()) - 1;
+
+		auto& src = stacks[from];
+		auto& dst = stacks[to];
 		if (is_part_one)
 		{
-			do_move(stacks, move, from, to);
+			do_move(src, dst, move_count);
 		}
 		else
 		{
-			do_move_multiply(stacks, move, from, to);
+			do_move_multiply(src, dst, move_count);
 		}		
 	}
 
 
 	std::string result;
-	for (int i = 0; i < stack_count; i++)
+	for (auto& stack : stacks)
 	{
-		result += stacks[i].back();
+		result += stack.back();
 	}
 	std::cout << result << "\n";
 }
