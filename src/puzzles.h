@@ -13,3 +13,4 @@ class puzzle
 public:
 	static void run(std::vector<std::string>& lines);
 };
+
