@@ -6,21 +6,22 @@
 #include <iostream>
 #include <functional>
 
-using puzzle_entry_point = void(*)(std::vector<std::string>&);
-
-struct input 
+struct input
 {
 	std::vector<std::string> lines;
+	int current_part;
+
+	bool is_part_one() { return current_part == 1; };
+	bool is_part_two() { return current_part == 2; };
 };
+
+using puzzle_entry_point = void(*)(input&);
 
 template<int Day, int Part = 0>
 struct puzzle
 {
-	static void run(std::vector<std::string>& lines)
+	static void run(input& input)
 	{
-		input input;
-		input.lines = lines;
-
 		auto& handler = get_handler();
 		if (handler != nullptr)
 		{
@@ -29,10 +30,9 @@ struct puzzle
 	}
 
 	template<typename T>
-	puzzle(T fn)
+	puzzle(T handler)
 	{
-		get_handler() = fn;
-		std::cout << "!!";
+		get_handler() = handler;
 	}
 
 	static std::function<void(input&)>& get_handler()

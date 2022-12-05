@@ -22,12 +22,12 @@ void do_move_multiply(stack& src, stack& dst, int count)
 	src.resize(start);
 }
 
-void solve(std::vector<std::string>& lines, bool is_part_one)
+puzzle<5> X = [](input& input)
 {
-	auto stack_count = (lines[0].size() + 1) / 4;
+	auto stack_count = (input.lines[0].size() + 1) / 4;
 
 	auto empty_line_index = 0;
-	while (!lines[empty_line_index].empty())
+	while (!input.lines[empty_line_index].empty())
 	{
 		empty_line_index++;
 	}
@@ -37,7 +37,7 @@ void solve(std::vector<std::string>& lines, bool is_part_one)
 
 	for (int index = empty_line_index - 2; index >= 0; index--)
 	{
-		auto line = lines[index];
+		auto line = input.lines[index];
 		for (int i = 0; i < stack_count; i++)
 		{
 			char c = line[1 + 4 * i];
@@ -48,23 +48,23 @@ void solve(std::vector<std::string>& lines, bool is_part_one)
 		}
 	}
 
-	for (int index = empty_line_index + 1; index < lines.size(); index++)
+	for (int index = empty_line_index + 1; index < input.lines.size(); index++)
 	{
-		auto arr = str_utils::split(lines[index], " ");
+		auto arr = str_utils::split(input.lines[index], " ");
 		auto move_count = std::atoi(arr[1].c_str());
 		auto from = std::atoi(arr[3].c_str()) - 1;
 		auto to = std::atoi(arr[5].c_str()) - 1;
 
 		auto& src = stacks[from];
 		auto& dst = stacks[to];
-		if (is_part_one)
+		if (input.is_part_one())
 		{
 			do_move(src, dst, move_count);
 		}
 		else
 		{
 			do_move_multiply(src, dst, move_count);
-		}		
+		}
 	}
 
 
@@ -74,14 +74,4 @@ void solve(std::vector<std::string>& lines, bool is_part_one)
 		result += stack.back();
 	}
 	std::cout << result << "\n";
-}
-
-//void puzzle<5, 1>::run(std::vector<std::string>& lines)
-//{
-//	solve(lines, true);
-//}
-//
-//void puzzle<5, 2>::run(std::vector<std::string>& lines)
-//{
-//	solve(lines, false);
-//}
+};
