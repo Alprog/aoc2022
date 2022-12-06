@@ -1,4 +1,4 @@
-#include "puzzles.h"
+#include "puzzle_handlers.h"
 
 #include "string_utils.h"
 

@@ -1,4 +1,4 @@
-#include "puzzles.h"
+#include "puzzle_handlers.h"
 #include "binary_heap.h"
 
 puzzle<1, 1> X = [](input& input)

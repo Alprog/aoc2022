@@ -1,4 +1,4 @@
-#include "puzzles.h"
+#include "puzzle_handlers.h"
 
 #include <fstream>
 #include <format>

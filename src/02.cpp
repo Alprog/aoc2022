@@ -1,4 +1,4 @@
-#include "puzzles.h"
+#include "puzzle_handlers.h"
 
 puzzle<2, 1> X = [](input& input)
 {
