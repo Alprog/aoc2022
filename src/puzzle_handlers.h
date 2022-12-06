@@ -15,31 +15,22 @@ struct input
 	bool is_part_two() { return current_part == 2; };
 };
 
-using puzzle_entry_point = void(*)(input&);
+using puzzle_handler = void(*)(input&);
+
+void register_puzzle_handler(int day, int part, puzzle_handler handler);
+void try_run_puzzle_handler(int day, int part, input& input);
+int get_max_puzzle_day();
+
+constexpr int universal_part = 0;
 
 template<int Day, int Part = 0>
 struct puzzle
 {
-	static void run(input& input)
-	{
-		auto& handler = get_handler();
-		if (handler != nullptr)
-		{
-			handler(input);
-		}
-	}
-
 	template<typename T>
 	puzzle(T handler)
 	{
-		get_handler() = handler;
+		register_puzzle_handler(Day, Part, handler);
 	}
-
-	static std::function<void(input&)>& get_handler()
-	{
-		static std::function<void(input&)> handler;
-		return handler;
-	}	
 };
 
 #define COMB(x, y) x ## y
