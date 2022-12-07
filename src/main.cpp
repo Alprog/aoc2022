@@ -50,7 +50,7 @@ void run_puzzle(int day, std::string& input_filename, std::string answers_filena
 			{
 				if (answers.size() < part)
 				{
-					std::cout << std::format("Test{}: {} (no answer)\n", part_letter, value);
+					std::cout << std::format("Test{}: {} (answer unknown)\n", part_letter, value);
 					continue;
 				}
 
