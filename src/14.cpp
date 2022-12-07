@@ -3,7 +3,7 @@
 #include "string_utils.h"
 #include <functional>
 
-//puzzle<14, 1> X = [](input& input)
+//puzzle<14, 1> X = [](input& input) -> output
 //{
 //	int total = 0;
 //
@@ -12,5 +12,5 @@
 //
 //	}
 //
-//	std::cout << total << "\n";
+//	return total;
 //};

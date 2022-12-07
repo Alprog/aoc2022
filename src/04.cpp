@@ -2,7 +2,7 @@
 
 #include "string_utils.h"
 
-puzzle<4, 1> X = [](input& input)
+puzzle<4, 1> X = [](input& input) -> output
 {
 	auto total = 0;
 
@@ -26,10 +26,10 @@ puzzle<4, 1> X = [](input& input)
 		}
 	}
 
-	std::cout << total << "\n";
+	return total;
 };
 
-puzzle<4, 2> X = [](input& input)
+puzzle<4, 2> X = [](input& input) -> output
 {
 	auto total = 0;
 
@@ -53,5 +53,5 @@ puzzle<4, 2> X = [](input& input)
 		}
 	}
 
-	std::cout << total << "\n";
+	return total;
 };

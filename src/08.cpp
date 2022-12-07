@@ -3,7 +3,7 @@
 #include "string_utils.h"
 #include <functional>
 
-puzzle<8, 1> X = [](input& input)
+puzzle<8, 1> X = [](input& input) -> output
 {
 	int total = 0;
 
@@ -12,5 +12,5 @@ puzzle<8, 1> X = [](input& input)
 
 	}
 
-	std::cout << total << "\n";
+	return total;
 };

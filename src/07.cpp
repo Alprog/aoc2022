@@ -84,7 +84,7 @@ dir build_fs(input& input)
 	return root;
 }
 
-puzzle<7, 1> X = [](input& input)
+puzzle<7, 1> X = [](input& input) -> output
 {
 	dir root = build_fs(input);
 	root.calculate_size();
@@ -98,10 +98,10 @@ puzzle<7, 1> X = [](input& input)
 			}
 		});
 
-	std::cout << total << "\n";
+	return total;
 };
 
-puzzle<7, 2> X = [](input& input)
+puzzle<7, 2> X = [](input& input) -> output
 {
 	dir root = build_fs(input);
 
@@ -122,5 +122,5 @@ puzzle<7, 2> X = [](input& input)
 		}
 	});
 
-	std::cout << best_size << "\n";
+	return best_size;
 };

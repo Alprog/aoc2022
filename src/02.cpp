@@ -1,6 +1,6 @@
 #include "puzzle_handlers.h"
 
-puzzle<2, 1> X = [](input& input)
+puzzle<2, 1> X = [](input& input) -> output
 {
 	auto score = 0;
 	for (auto& line : input.lines)
@@ -13,10 +13,10 @@ puzzle<2, 1> X = [](input& input)
 		score += (my + 1) + (result * 3);
 
 	}
-	std::cout << score << "\n";
+	return score;
 };
 
-puzzle<2, 1> X = [](input& input)
+puzzle<2, 2> X = [](input& input) -> output
 {
 	auto score = 0;
 	for (auto& line : input.lines)
@@ -29,5 +29,5 @@ puzzle<2, 1> X = [](input& input)
 		score += (my + 1) + (result * 3);
 
 	}
-	std::cout << score << "\n";
+	return score;
 };

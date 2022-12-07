@@ -1,6 +1,6 @@
 #include "puzzle_handlers.h"
 
-puzzle<6> X = [](input& input)
+puzzle<6> X = [](input& input) -> output
 {
 	auto line = input.lines[0];
 	int N = input.is_part_one() ? 4 : 14; // unique_area_length
@@ -28,11 +28,10 @@ puzzle<6> X = [](input& input)
 			}
 			if (duplicates == 0)
 			{
-				std::cout << i + 1 << "\n";
-				return;
+				return i + 1;
 			}
 		}
 	}
 
-	std::cout << "not found" << "\n";
+	return "not found";
 };

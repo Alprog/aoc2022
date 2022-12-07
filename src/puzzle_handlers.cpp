@@ -1,5 +1,11 @@
 #include "puzzle_handlers.h"
 
+bool input::is_part_one() const { return current_part == 1; };
+bool input::is_part_two() const { return current_part == 2; };
+
+output::output(const char* value) : result{ value } {}
+output::output(std::string value) : result{ value } {}
+
 using handler_table = std::vector<std::vector<puzzle_handler>>;
 
 handler_table& get_handler_table()
@@ -22,7 +28,7 @@ void register_puzzle_handler(int day, int part, puzzle_handler handler)
 	table[day][part] = handler;
 }
 
-void try_run_puzzle_handler(int day, int part, input& input)
+void try_run_puzzle_handler(int day, int part, input& input, output& output)
 {
 	auto& table = get_handler_table();
 	if (table.size() > day && table[day].size() > part)
@@ -30,7 +36,10 @@ void try_run_puzzle_handler(int day, int part, input& input)
 		auto& handler = table[day][part];
 		if (handler != nullptr)
 		{
-			handler(input);
+			if (!output.result.has_value())
+			{
+				output = handler(input);
+			}
 		}
 	}
 }

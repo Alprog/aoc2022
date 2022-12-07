@@ -1,7 +1,7 @@
 #include "puzzle_handlers.h"
 #include "binary_heap.h"
 
-puzzle<1, 1> X = [](input& input)
+puzzle<1, 1> X = [](input& input) -> output
 {
 	input.lines.push_back("");
 
@@ -20,10 +20,10 @@ puzzle<1, 1> X = [](input& input)
 		}
 	}
 
-	std::cout << max << "\n";
+	return max;
 };
 
-puzzle<1, 2> X = [](input& input)
+puzzle<1, 2> X = [](input& input) -> output
 {
 	binary_heap_max<int> heap;
 
@@ -41,6 +41,5 @@ puzzle<1, 2> X = [](input& input)
 		}
 	}
 
-	auto result = heap.pop() + heap.pop() + heap.pop();
-	std::cout << result << "\n";
+	return heap.pop() + heap.pop() + heap.pop();
 };

@@ -22,7 +22,7 @@ void do_move_multiply(stack& src, stack& dst, int count)
 	src.resize(start);
 }
 
-puzzle<5> X = [](input& input)
+puzzle<5> X = [](input& input) -> output
 {
 	auto stack_count = (input.lines[0].size() + 1) / 4;
 
@@ -73,5 +73,5 @@ puzzle<5> X = [](input& input)
 	{
 		result += stack.back();
 	}
-	std::cout << result << "\n";
+	return result;
 };

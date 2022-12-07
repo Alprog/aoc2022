@@ -5,20 +5,36 @@
 #include <stdio.h>
 #include <iostream>
 #include <functional>
+#include <optional>
 
 struct input
 {
 	std::vector<std::string> lines;
 	int current_part;
 
-	bool is_part_one() { return current_part == 1; };
-	bool is_part_two() { return current_part == 2; };
+	bool is_part_one() const;
+	bool is_part_two() const;
 };
 
-using puzzle_handler = void(*)(input&);
+struct output
+{
+	output() = default;
+	output(const char* value);
+	output(std::string value);
+
+	template <typename T>
+	output(T&& value)
+		: result{ std::to_string(value) }
+	{
+	}
+
+	std::optional<std::string> result;
+};
+
+using puzzle_handler = auto(*)(input&) -> output;
 
 void register_puzzle_handler(int day, int part, puzzle_handler handler);
-void try_run_puzzle_handler(int day, int part, input& input);
+void try_run_puzzle_handler(int day, int part, input& input, output& output);
 int get_max_puzzle_day();
 
 constexpr int universal_part = 0;
