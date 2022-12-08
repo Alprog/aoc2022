@@ -3,17 +3,7 @@
 #include "string_utils.h"
 #include <functional>
 
-#if defined(_MSC_VER)
-#include <intrin.h>
-uint32_t get_leading_zeros(uint32_t value) { return __lzcnt(value); }
-uint32_t get_trailing_zeros(uint32_t value) {
-	unsigned long result;
-	return _BitScanForward(&result, value) ? result : sizeof(uint32_t) * CHAR_BIT;
-}
-#else
-uint32_t get_leading_zeros(uint32_t value) { return __builtin_clz(value); }
-uint32_t get_trailing_zeros(uint32_t value) { return __builtin_ctz(value); }
-#endif
+//======================================== PART 1:
 
 int look(std::string& height_map, std::vector<bool>& visible_map, int start, int line_offset, int line_count, int step_offset, int step_count)
 {
@@ -64,7 +54,19 @@ puzzle<8, 1> X = [](input& input) -> output
 	return total;
 };
 
-//=================================================================================================================
+//======================================== PART 2:
+
+#if defined(_MSC_VER)
+#include <intrin.h>
+uint32_t get_leading_zeros(uint32_t value) { return __lzcnt(value); }
+uint32_t get_trailing_zeros(uint32_t value) {
+	unsigned long result;
+	return _BitScanForward(&result, value) ? result : sizeof(uint32_t) * CHAR_BIT;
+}
+#else
+uint32_t get_leading_zeros(uint32_t value) { return __builtin_clz(value); }
+uint32_t get_trailing_zeros(uint32_t value) { return __builtin_ctz(value); }
+#endif
 
 void traverse(std::string& height_map, std::vector<int>& visible_map, int start, int line_offset, int line_count, int step_offset, int step_count)
 {
