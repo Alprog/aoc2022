@@ -25,6 +25,8 @@ puzzle<1, 1> X = [](input& input) -> output
 
 puzzle<1, 2> X = [](input& input) -> output
 {
+	input.lines.push_back("");
+
 	binary_heap_max<int> heap;
 
 	int cur = 0;

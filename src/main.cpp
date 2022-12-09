@@ -3,7 +3,7 @@
 #include <fstream>
 #include <format>
 
-constexpr bool run_only_last_puzzle = true;
+constexpr bool run_only_last_puzzle = false;
 
 constexpr int part_count = 2;
 
@@ -17,71 +17,81 @@ void read_all_lines(std::string& filename, std::vector<std::string>& output)
 	}
 }
 
-void run_puzzle(int day, std::string& input_filename, std::string answers_filename)
+void run_puzzle(int day, int part, std::string& filename, std::string& fallback_filename, std::optional<std::string> answer)
 {
+	char part_letter = 'A' + part - 1;
+
+	bool is_test = answer.has_value();
+	std::cout << (is_test ? "Test" : "Puzzle") << part_letter << ": ";
+
 	input input;
-	read_all_lines(input_filename, input.lines);
-
-	bool is_test = answers_filename != "";
-
+	input.current_part = part;
+	read_all_lines(filename, input.lines);
 	if (input.lines.empty())
 	{
-		std::cout << (is_test ? "Test: No Input\n" : "Puzzle: No Input\n");
+		read_all_lines(fallback_filename, input.lines);
+	}
+	if (input.lines.empty())
+	{
+		std::cout << "No Input\n";
+		return;
+	}
+	
+	output output;
+	try_run_puzzle_handler(day, part, input, output);
+	try_run_puzzle_handler(day, universal_part, input, output);
+	if (!output.result.has_value())
+	{
+		std::cout << "No Handler\n";
 		return;
 	}
 
-	std::vector<std::string> answers;
-	read_all_lines(answers_filename, answers);
+	const auto& result = output.result.value();
+	std::cout << result;
 
-	for (int part = 1; part <= part_count; part++)
+	if (answer.has_value())
 	{
-		input.current_part = part;
-		
-		output output;
-		try_run_puzzle_handler(day, part, input, output);
-		try_run_puzzle_handler(day, universal_part, input, output);
-		
-		char part_letter = 'A' + part - 1;
-
-		if (output.result.has_value())
+		if (answer == "")
 		{
-			const auto& value = output.result.value();
-			if (is_test)
-			{
-				if (answers.size() < part)
-				{
-					std::cout << std::format("Test{}: {} (answer unknown)\n", part_letter, value);
-					continue;
-				}
-
-				auto answer = answers[part - 1];
-				if (output.result == answer)
-				{
-					std::cout << std::format("Test{}: {} (passed)\n", part_letter, value);
-				}
-				else
-				{
-					std::cout << std::format("Test{}: {} (failed! expected: {})\n", part_letter, value, answer);
-				}
-			}
-			else
-			{
-				std::cout << std::format("Part{}: {}\n", part_letter, value);
-			}
+			std::cout << " (answer unknown)";
+		}
+		else if (result == answer)
+		{
+			std::cout << " (passed)";
+		}
+		else
+		{
+			std::cout << " (failed!expected: " << answer.value() << ")";
 		}
 	}
+
+	std::cout << std::endl;
 }
 
 void run_puzzle(int day)
 {
 	std::cout << "Day " << day << "\n";
 
-	std::string test_filename = std::format("input/{:02}_test.txt", day);
+	// Tests
 	std::string answers_filename = std::format("input/{:02}_answers.txt", day);
-	run_puzzle(day, test_filename, answers_filename);
+	std::vector<std::string> answers;
+	read_all_lines(answers_filename, answers);
+	answers.resize(part_count);
 
-	std::string input_filename = std::format("input/{:02}_input.txt", day);
-	run_puzzle(day, input_filename, "");
+	std::string test_fallback_filename = std::format("input/{:02}_test.txt", day);
+	for (int part = 1; part <= part_count; part++)
+	{
+		std::string filename = std::format("input/{:02}_test_{:02}.txt", day, part);
+		run_puzzle(day, part, filename, test_fallback_filename, answers[part - 1]);
+	}
+
+	// Puzzles
+	std::string input_fallback_filename = std::format("input/{:02}_input.txt", day);
+	for (int part = 1; part <= part_count; part++)
+	{
+		std::string filename = std::format("input/{:02}_input_{:02}.txt", day, part);
+		run_puzzle(day, part, filename, input_fallback_filename, {});
+	}
 }
 
 int main()
