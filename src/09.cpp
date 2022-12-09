@@ -26,6 +26,16 @@ struct Vector2
 	}
 };
 
+int sgn(int val)
+{
+	if (val < 0)
+		return -1;
+	else if (val > 0)
+		return 1;
+	else
+		return 0;
+}
+
 Vector2 get_offset(char c)
 {
 	switch (c)
@@ -41,50 +51,13 @@ Vector2 get_offset(char c)
 	}
 }
 
-int sgn(int val)
+puzzle<9> X = [](input& input) -> output
 {
-	if (val < 0)
-		return -1;
-	else if (val > 0)
-		return 1;
-	else
-		return 0;
-}
+	int knot_count = input.is_part_one() ? 2 : 10;
 
-puzzle<9, 1> X = [](input& input) -> output
-{
-	Vector2 head, tail;
-
-	std::set<Vector2> set;
-
-	for (auto& line : input.lines)
-	{
-		auto offset = get_offset(line[0]);
-		auto count = std::atoi(line.c_str() + 2);
-		for (int i = 0; i < count; i++)
-		{
-			head = head + offset;
-
-			auto dist = head - tail;
-			if (std::abs(dist.x) >= 2 || std::abs(dist.y) >= 2)
-			{
-				tail.x += sgn(dist.x);
-				tail.y += sgn(dist.y);
-			}
-			set.insert(tail);
-		}
-	}
-
-	return set.size();
-};
-
-puzzle<9, 2> X = [](input& input) -> output
-{
-	constexpr int knot_count = 10;
-
-	Vector2 knots[knot_count];
-	auto& head = knots[0];
-	auto& tail = knots[knot_count - 1];
+	std::vector<Vector2> knots(knot_count);
+	auto& head = knots.front();
+	auto& tail = knots.back();
 
 	std::set<Vector2> set;
 
