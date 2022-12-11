@@ -4,6 +4,8 @@
 #include <functional>
 #include "binary_heap.h"
 
+using int64 = int64_t;
+
 struct monkey
 {
 	monkey(std::vector<monkey>& monkeys)
@@ -12,15 +14,15 @@ struct monkey
 	}
 
 	std::vector<monkey>& monkeys;
-	std::vector<long long> items;
+	std::vector<int64> items;
 	char operation;
-	long long operand;
-	long long test_division;
-	long long true_index;
-	long long false_index;
-	long long inspections = 0;
+	int64 operand;
+	int64 test_division;
+	int64 true_index;
+	int64 false_index;
+	int64 inspections = 0;
 
-	void do_round(std::function<long long(long long)> callback)
+	void do_round(std::function<int64(int64)> callback)
 	{
 		inspections += items.size();
 		for (auto& item : items)
@@ -95,14 +97,14 @@ puzzle<11> X = [](input& input) -> output
 	std::vector<monkey> monkeys;
 	fill_monkeys(monkeys, input);
 
-	long long multiplier = 1;
+	int64 multiplier = 1;
 	for (auto& monkey : monkeys)
 	{
 		multiplier *= monkey.test_division;
 	}
 
-	std::function<long long(long long)> callbackA = [&](long long value) { return value / 3; };
-	std::function<long long(long long)> callbackB = [&](long long value) { return value % multiplier; };
+	std::function<int64(int64)> callbackA = [&](int64 value) { return value / 3; };
+	std::function<int64(int64)> callbackB = [&](int64 value) { return value % multiplier; };
 	auto callback = input.is_part_one() ? callbackA : callbackB;
 
 	int count = input.is_part_one() ? 20 : 10'000;
@@ -114,7 +116,7 @@ puzzle<11> X = [](input& input) -> output
 		}
 	}
 
-	binary_heap_max<long long> heap;
+	binary_heap_max<int64> heap;
 	for (auto& monkey : monkeys)
 	{
 		heap.push(monkey.inspections);
