@@ -2,7 +2,7 @@
 
 #include <sstream>
 
-std::vector<std::string> str_utils::split(std::string& line, std::string_view delimeter)
+std::vector<std::string> str_utils::split(std::string_view line, std::string_view delimeter)
 {
     std::vector<std::string> result;
 
@@ -10,13 +10,13 @@ std::vector<std::string> str_utils::split(std::string& line, std::string_view de
     size_t index = line.find(delimeter);
     while (index != std::string::npos)
     {
-        result.push_back(line.substr(start, index - start));
+        result.emplace_back(line.substr(start, index - start));
         start = index + delimeter.size();
         index = line.find(delimeter, start);
     }
     if (start <= line.size())
     {
-        result.push_back(line.substr(start));
+        result.emplace_back(line.substr(start));
     }
 
     return result;

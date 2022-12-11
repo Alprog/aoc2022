@@ -12,7 +12,7 @@ namespace str_utils
         return index != std::string::npos;
     }
 
-    std::vector<std::string> split(std::string& line, std::string_view delimeter);
+    std::vector<std::string> split(std::string_view line, std::string_view delimeter);
     std::string join(std::vector<std::string>& vector, std::string_view delimeter);
     void replace_all(std::string& string, std::string_view old_value, std::string_view new_value);
 }
