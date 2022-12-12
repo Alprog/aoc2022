@@ -3,14 +3,14 @@
 #include "string_utils.h"
 #include <functional>
 
-//puzzle<13, 1> X = [](input& input) -> output
-//{
-//	int total = 0;
-//
-//	for (auto& line : input.lines)
-//	{
-//
-//	}
-//
-//	return total;
-//};
+puzzle<13, 1> X = [](input& input) -> output
+{
+	int total = 0;
+
+	for (auto& line : input.lines)
+	{
+
+	}
+
+	return total;
+};
