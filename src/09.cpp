@@ -5,22 +5,22 @@
 
 #include <set>
 
-struct Vector2
+struct vector2
 {
 	int x = 0;
 	int y = 0;
 
-	Vector2 operator+(const Vector2& rhs)
+	vector2 operator+(const vector2& rhs)
 	{
 		return { x + rhs.x, y + rhs.y };
 	}
 
-	Vector2 operator-(const Vector2& rhs)
+	vector2 operator-(const vector2& rhs)
 	{
 		return { x - rhs.x, y - rhs.y };
 	}
 
-	bool operator<(const Vector2& rhs) const
+	bool operator<(const vector2& rhs) const
 	{
 		return (x << 16) + y < (rhs.x << 16) + rhs.y;
 	}
@@ -36,7 +36,7 @@ int sgn(int val)
 		return 0;
 }
 
-Vector2 get_offset(char c)
+vector2 get_offset(char c)
 {
 	switch (c)
 	{
@@ -55,11 +55,11 @@ puzzle<9> X = [](input& input) -> output
 {
 	int knot_count = input.is_part_one() ? 2 : 10;
 
-	std::vector<Vector2> knots(knot_count);
+	std::vector<vector2> knots(knot_count);
 	auto& head = knots.front();
 	auto& tail = knots.back();
 
-	std::set<Vector2> set;
+	std::set<vector2> set;
 
 	for (auto& line : input.lines)
 	{

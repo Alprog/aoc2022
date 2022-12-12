@@ -3,25 +3,10 @@
 #include "string_utils.h"
 #include <functional>
 
-struct Vector2
+struct vector2
 {
 	int x = 0;
 	int y = 0;
-
-	Vector2 operator+(const Vector2& rhs)
-	{
-		return { x + rhs.x, y + rhs.y };
-	}
-
-	Vector2 operator-(const Vector2& rhs)
-	{
-		return { x - rhs.x, y - rhs.y };
-	}
-
-	bool operator<(const Vector2& rhs) const
-	{
-		return (x << 16) + y < (rhs.x << 16) + rhs.y;
-	}
 };
 
 struct node
@@ -33,7 +18,7 @@ struct node
 	{
 	}
 
-	Vector2 position;
+	vector2 position;
 	char height;
 	int travel_price;
 };
@@ -43,8 +28,8 @@ puzzle<12> X = [](input& input) -> output
 	auto width = input.lines[0].size();
 	auto height = input.lines.size();
 
-	node* start_node = nullptr;
-	node* end_node = nullptr;
+	node* p_start_node = nullptr;
+	node* p_end_node = nullptr;
 
 	std::vector<std::vector<node>> map;
 	map.reserve(height);
@@ -59,20 +44,23 @@ puzzle<12> X = [](input& input) -> output
 			auto& node = row.emplace_back(x, y, height);
 			if (node.height == 'S')
 			{
-				start_node = &node;
+				p_start_node = &node;
 				node.height = 'a';
 			}
 			else if (node.height == 'E')
 			{
-				end_node = &node;
+				p_end_node = &node;
 				node.height = 'z';
 			}
 		}
 	}
 
-	end_node->travel_price = 0;
+	auto& start_node = *p_start_node;
+	auto& end_node = *p_end_node;
 
-	std::vector<std::reference_wrapper<node>> wave{ *end_node };
+	end_node.travel_price = 0;
+
+	std::vector<std::reference_wrapper<node>> wave{ end_node };
 	std::vector<std::reference_wrapper<node>> next_wave;
 
 	auto check = [&](node& node, int dx, int dy)
@@ -109,7 +97,7 @@ puzzle<12> X = [](input& input) -> output
 
 	if (input.is_part_one())
 	{
-		return start_node->travel_price;
+		return start_node.travel_price;
 	}
 	else
 	{
