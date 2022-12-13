@@ -141,48 +141,6 @@ int compare(unit& lhs, unit& rhs)
 	return rhs_size - lhs_size;
 }
 
-int compare2(unit& lhs, unit& rhs)
-{
-	auto is_lhs_single = lhs.is_single_value();
-	auto is_rhs_single = rhs.is_single_value();
-	if (is_lhs_single && is_rhs_single)
-	{
-		return static_cast<single_item&>(rhs).value - static_cast<single_item&>(lhs).value;
-	}
-
-	if (!is_lhs_single && !is_rhs_single)
-	{
-		int lhs_size = lhs.size();
-		int rhs_size = rhs.size();
-		int min_count = std::min(lhs_size, rhs_size);
-		if (min_count > 0)
-		{
-			for (int i = 0; i < min_count; i++)
-			{
-				auto result = compare2(*lhs.get_child(i), *rhs.get_child(i));
-				if (result != 0)
-				{
-					return result;
-				}
-			}
-		}
-		return rhs_size - lhs_size;
-	}
-
-	if (is_lhs_single)
-	{
-		auto new_l = new item_list();
-		new_l->items.push_back(&lhs);
-		return compare2(*new_l, rhs);
-	}
-	else
-	{
-		auto new_r = new item_list();
-		new_r->items.push_back(&rhs);
-		return compare2(lhs, *new_r);
-	}
-}
-
 puzzle<13, 1> X = [](input& input) -> output
 {
 	int total = 0;
