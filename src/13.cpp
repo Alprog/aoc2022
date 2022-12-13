@@ -3,13 +3,209 @@
 #include "string_utils.h"
 #include <functional>
 
+struct unit
+{
+	virtual std::string to_string() = 0;
+	virtual int size() = 0;
+	virtual unit* get_child(int index) = 0;
+	virtual int get_left_value() = 0;
+	virtual bool is_single_value() { return false; };
+};
+
+struct item_list : public unit
+{
+	std::vector<unit*> items;
+
+	virtual int size() override { return items.size(); };
+	virtual unit* get_child(int i) override { return items[i]; };
+	virtual int get_left_value() override { return !items.empty() ? items[0]->get_left_value() : -1; };
+
+	virtual std::string to_string() override
+	{
+		std::string result = "[";
+		for (int i = 0; i < items.size(); i++)
+		{
+			if (i > 0)
+			{
+				result += ",";
+			}
+			result += items[i]->to_string();
+		}
+		result += "]";
+		return result;
+	};
+};
+
+struct single_item : public unit
+{
+	single_item(int value) 
+		: value{ value }
+	{
+	}
+
+	int value;
+
+	virtual int size() override { return 1; };
+	virtual unit* get_child(int i) override { return this; };
+	virtual int get_left_value() override { return value; };
+	virtual bool is_single_value() override { return true; };
+
+	virtual std::string to_string() override { return std::to_string(value); };
+};
+
+unit* parse_unit(char*& ptr);
+
+single_item* parse_value(char*& it)
+{
+	int value = 0;
+	
+	while (true)
+	{
+		auto c = *it;
+		if (c == ',' || c == ']')
+		{
+			return new single_item{ value };
+		}
+		else
+		{
+			value = value * 10 + c - '0';
+			it++;
+		}
+	}
+}
+
+item_list* parse_list(char*& it)
+{
+	auto list = new item_list();
+	if (it[1] == ']')
+	{
+		it += 2;
+		return list;
+	}
+
+	while (*it++ != ']')
+	{
+		list->items.push_back(parse_unit(it));
+	}
+	return list;
+}
+
+unit* parse_unit(char*& it)
+{
+	if (*it == '[')
+	{
+		return parse_list(it);
+	}
+	else
+	{
+		return parse_value(it);
+	}
+}
+
+void print_pair(unit& unitA, unit& unitB)
+{
+	std::cout << unitA.to_string() << std::endl;
+	std::cout << unitB.to_string() << std::endl;
+	std::cout << std::endl;
+}
+
+int compare(unit& lhs, unit& rhs)
+{
+	int lhs_size = lhs.size();
+	int rhs_size = rhs.size();
+
+	int min_count = std::min(lhs_size, rhs_size);
+	if (min_count > 0)
+	{
+		if (lhs.is_single_value() || rhs.is_single_value())
+		{
+			auto result = rhs.get_left_value() - lhs.get_left_value();
+			if (result != 0)
+			{
+				return result;
+			}
+		}
+		else
+		{
+			for (int i = 0; i < min_count; i++)
+			{
+				auto result = compare(*lhs.get_child(i), *rhs.get_child(i));
+				if (result != 0)
+				{
+					return result;
+				}
+			}
+		}
+	}
+
+	return rhs_size - lhs_size;
+}
+
+int compare2(unit& lhs, unit& rhs)
+{
+	auto is_lhs_single = lhs.is_single_value();
+	auto is_rhs_single = rhs.is_single_value();
+	if (is_lhs_single && is_rhs_single)
+	{
+		return static_cast<single_item&>(rhs).value - static_cast<single_item&>(lhs).value;
+	}
+
+	if (!is_lhs_single && !is_rhs_single)
+	{
+		int lhs_size = lhs.size();
+		int rhs_size = rhs.size();
+		int min_count = std::min(lhs_size, rhs_size);
+		if (min_count > 0)
+		{
+			for (int i = 0; i < min_count; i++)
+			{
+				auto result = compare2(*lhs.get_child(i), *rhs.get_child(i));
+				if (result != 0)
+				{
+					return result;
+				}
+			}
+		}
+		return rhs_size - lhs_size;
+	}
+
+	if (is_lhs_single)
+	{
+		auto new_l = new item_list();
+		new_l->items.push_back(&lhs);
+		return compare2(*new_l, rhs);
+	}
+	else
+	{
+		auto new_r = new item_list();
+		new_r->items.push_back(&rhs);
+		return compare2(lhs, *new_r);
+	}
+}
+
 puzzle<13, 1> X = [](input& input) -> output
 {
 	int total = 0;
 
-	for (auto& line : input.lines)
+	int pair_count = (input.lines.size() + 1) / 3;
+	for (int index = 0; index < pair_count; index++)
 	{
+		auto& lineA = input.lines[index * 3 + 0];
+		auto& lineB = input.lines[index * 3 + 1];
+		auto itA = &lineA[0];
+		auto itB = &lineB[0];
+		auto& unitA = *parse_unit(itA);
+		auto& unitB = *parse_unit(itB);
 
+		if (unitA.to_string() != lineA || unitB.to_string() != lineB)
+		{
+			break;
+		}
+
+		if (compare(unitA, unitB) > 0)
+		{
+			total += (index + 1);
+		}
 	}
 
 	return total;
