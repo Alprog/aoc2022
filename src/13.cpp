@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "puzzle_handlers.h"
 
 #include "string_utils.h"
@@ -53,9 +55,9 @@ struct single_item : public unit
 	virtual std::string to_string() override { return std::to_string(value); };
 };
 
-unit* parse_unit(char*& ptr);
+unit* parse_unit(const char*& ptr);
 
-single_item* parse_value(char*& it)
+single_item* parse_value(const char*& it)
 {
 	int value = 0;
 	
@@ -74,7 +76,7 @@ single_item* parse_value(char*& it)
 	}
 }
 
-item_list* parse_list(char*& it)
+item_list* parse_list(const char*& it)
 {
 	auto list = new item_list();
 	if (it[1] == ']')
@@ -90,7 +92,7 @@ item_list* parse_list(char*& it)
 	return list;
 }
 
-unit* parse_unit(char*& it)
+unit* parse_unit(const char*& it)
 {
 	if (*it == '[')
 	{
@@ -100,6 +102,12 @@ unit* parse_unit(char*& it)
 	{
 		return parse_value(it);
 	}
+}
+
+unit* parse(std::string_view line)
+{
+	auto it = &line[0];
+	return parse_unit(it);
 }
 
 void print_pair(unit& unitA, unit& unitB)
@@ -150,10 +158,8 @@ puzzle<13, 1> X = [](input& input) -> output
 	{
 		auto& lineA = input.lines[index * 3 + 0];
 		auto& lineB = input.lines[index * 3 + 1];
-		auto itA = &lineA[0];
-		auto itB = &lineB[0];
-		auto& unitA = *parse_unit(itA);
-		auto& unitB = *parse_unit(itB);
+		auto& unitA = *parse(lineA);
+		auto& unitB = *parse(lineB);
 
 		if (unitA.to_string() != lineA || unitB.to_string() != lineB)
 		{
@@ -167,4 +173,28 @@ puzzle<13, 1> X = [](input& input) -> output
 	}
 
 	return total;
+};
+
+puzzle<13, 2> X = [](input& input) -> output
+{
+	std::vector<unit*> units;	
+	for (auto& line : input.lines)
+	{
+		if (!line.empty())
+		{
+			units.push_back(parse(line));
+		}
+	}
+
+	auto* unitA = parse("[[2]]");
+	auto* unitB = parse("[[6]]");
+	units.push_back(unitA);
+	units.push_back(unitB);
+
+	std::sort(units.begin(), units.end(), [](unit*& lhs, unit*& rhs) { return compare(*lhs, *rhs) > 0; });
+
+	auto indexA = std::find(units.begin(), units.end(), unitA) - units.begin() + 1;
+	auto indexB = std::find(units.begin(), units.end(), unitB) - units.begin() + 1;
+	
+	return indexA * indexB;
 };
