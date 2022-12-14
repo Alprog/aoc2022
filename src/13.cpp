@@ -5,8 +5,24 @@
 #include "string_utils.h"
 #include <functional>
 
+template <typename T>
+struct auto_cleanup_vector : public std::vector<T*>
+{
+	using base = std::vector<T*>;
+
+	~auto_cleanup_vector()
+	{
+		for (int i = 0; i < base::size(); i++)
+		{
+			delete base::at(i);
+		}
+	}
+};
+
 struct unit
 {
+	virtual ~unit() = default;
+
 	virtual std::string to_string() = 0;
 	virtual int size() = 0;
 	virtual unit* get_child(int index) = 0;
@@ -16,7 +32,7 @@ struct unit
 
 struct item_list : public unit
 {
-	std::vector<unit*> items;
+	auto_cleanup_vector<unit> items;
 
 	virtual int size() override { return items.size(); };
 	virtual unit* get_child(int i) override { return items[i]; };
@@ -177,7 +193,7 @@ puzzle<13, 1> X = [](input& input) -> output
 
 puzzle<13, 2> X = [](input& input) -> output
 {
-	std::vector<unit*> units;	
+	auto_cleanup_vector<unit> units;
 	for (auto& line : input.lines)
 	{
 		if (!line.empty())
@@ -195,6 +211,6 @@ puzzle<13, 2> X = [](input& input) -> output
 
 	auto indexA = std::find(units.begin(), units.end(), unitA) - units.begin() + 1;
 	auto indexB = std::find(units.begin(), units.end(), unitB) - units.begin() + 1;
-	
+
 	return indexA * indexB;
 };
