@@ -144,7 +144,8 @@ puzzle<14> X = [](input& input) -> output
 		step_index++;
 	}
 	
-	std::cout << std::endl << map;
+	// Map visualization:
+	// std::cout << std::endl << map;
 
 	return step_index;
 };
