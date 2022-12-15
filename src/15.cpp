@@ -116,9 +116,14 @@ puzzle<15, 2> X = [](input& input) -> output
 	constexpr int max_line = 4000000;
 
 	vector2 searched_position;
-	for (int row = 0; row <= max_line; row++)
-	{
-		std::vector<range> ranges;
+	
+	std::vector<range> ranges;
+	ranges.reserve(signals.size());
+
+	for (int row = max_line; row >= 0; row--)
+	{	
+		ranges.clear();
+
 		for (auto& signal : signals)
 		{
 			int vert_distance = std::abs(signal.position.y - row);
@@ -138,7 +143,8 @@ puzzle<15, 2> X = [](input& input) -> output
 			if (a.end >= b.start - 1)
 			{
 				a = range::merge(a, b);
-				ranges.erase(ranges.begin() + i);
+				ranges[i] = ranges.back();
+				ranges.pop_back();
 			}
 		}
 
@@ -148,6 +154,7 @@ puzzle<15, 2> X = [](input& input) -> output
 			if (pos.x >= 0 && pos.x <= max_line)
 			{
 				searched_position = pos;
+				break;
 			}
 		}
 	}
