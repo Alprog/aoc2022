@@ -12,6 +12,11 @@ vector2 vector2::operator-(const vector2& rhs)
 	return { x - rhs.x, y - rhs.y };
 }
 
+int vector2::get_manhattan_size() const
+{
+	return std::abs(x) + std::abs(y);
+}
+
 vector2 vector2::min(vector2& lhs, vector2& rhs)
 {
 	return { std::min(lhs.x, rhs.x), std::min(lhs.y, rhs.y) };

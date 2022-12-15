@@ -3,17 +3,94 @@
 #include "string_utils.h"
 #include "vector2.h"
 #include <functional>
+#include <algorithm>
+#include <set>
+
+struct signal
+{
+	vector2 position;
+	int free_distance;
+};
+
+struct range
+{
+	int start;
+	int end;
+
+	int size()
+	{
+		return end - start + 1;
+	}
+
+	bool operator<(const range& rhs) const
+	{
+		return end < rhs.end;
+	}
+
+	static range merge(range& a, range& b)
+	{
+		return { std::min(a.start, b.start), std::max(a.end, b.end) };
+	}
+};
 
 puzzle<15, 1> X = [](input& input) -> output
 {
+	std::vector<signal> signals;
+	std::set<vector2> beacons;
+
+	vector2 min{ INT_MAX, INT_MAX };
+	vector2 max{ INT_MIN, INT_MIN };
+
 	for (auto& line : input.lines)
 	{
 		auto arr = str_utils::split(line, "=");
-		auto sx = std::atoi(arr[1].c_str());
-		auto sy = std::atoi(arr[2].c_str());
-		auto bx = std::atoi(arr[3].c_str());
-		auto by = std::atoi(arr[4].c_str());
+		auto signal_position = vector2{ std::atoi(arr[1].c_str()), std::atoi(arr[2].c_str()) };
+		auto beacon_position = vector2{ std::atoi(arr[3].c_str()), std::atoi(arr[4].c_str()) };
+		auto distance = (beacon_position - signal_position).get_manhattan_size();
+		signals.emplace_back(signal_position, distance);
+		beacons.insert(beacon_position);
 	}
 
-	return 0;
+	constexpr int target_row = 10;
+
+	constexpr int target_row = 2000000;
+
+	std::vector<range> ranges;
+	for (auto& signal : signals)
+	{
+		int vert_distance = std::abs(signal.position.y - target_row);
+		int offset = signal.free_distance - vert_distance;
+		if (offset >= 0)
+		{
+			ranges.emplace_back(signal.position.x - offset, signal.position.x + offset);
+		}
+	}
+
+	std::sort(ranges.begin(), ranges.end());
+
+	for (int i = ranges.size() - 1; i > 0; i--)
+	{
+		auto& a = ranges[i - 1];
+		auto& b = ranges[i];
+		if (a.end >= b.start)
+		{
+			a = range::merge(a, b);
+			ranges.erase(ranges.begin() + i);
+		}
+	}
+
+	int total = 0;
+	for (auto& range : ranges)
+	{
+		total += range.size();
+	}
+	for (auto& beacon : beacons)
+	{
+		if (beacon.y == target_row)
+		{
+			total--;
+		}
+	}
+
+	return total;
 };
