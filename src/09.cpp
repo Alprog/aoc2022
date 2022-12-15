@@ -1,30 +1,9 @@
 #include "puzzle_handlers.h"
 
 #include "string_utils.h"
+#include "vector2.h"
 #include <functional>
-
 #include <set>
-
-struct vector2
-{
-	int x = 0;
-	int y = 0;
-
-	vector2 operator+(const vector2& rhs)
-	{
-		return { x + rhs.x, y + rhs.y };
-	}
-
-	vector2 operator-(const vector2& rhs)
-	{
-		return { x - rhs.x, y - rhs.y };
-	}
-
-	bool operator<(const vector2& rhs) const
-	{
-		return (x << 16) + y < (rhs.x << 16) + rhs.y;
-	}
-};
 
 int sgn(int val)
 {

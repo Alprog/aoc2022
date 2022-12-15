@@ -1,13 +1,8 @@
 #include "puzzle_handlers.h"
 
 #include "string_utils.h"
+#include "vector2.h"
 #include <functional>
-
-struct vector2
-{
-	int x = 0;
-	int y = 0;
-};
 
 struct node
 {

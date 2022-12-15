@@ -1,33 +1,8 @@
 #include "puzzle_handlers.h"
 
 #include "string_utils.h"
+#include "vector2.h"
 #include <functional>
-
-struct vector2
-{
-	int x = 0;
-	int y = 0;
-
-	vector2 operator+(const vector2& rhs)
-	{
-		return { x + rhs.x, y + rhs.y };
-	}
-
-	vector2 operator-(const vector2& rhs)
-	{
-		return { x - rhs.x, y - rhs.y };
-	}
-
-	static vector2 min(vector2& lhs, vector2& rhs)
-	{
-		return { std::min(lhs.x, rhs.x), std::min(lhs.y, rhs.y) };
-	}
-
-	static vector2 max(vector2& lhs, vector2& rhs)
-	{
-		return { std::max(lhs.x, rhs.x), std::max(lhs.y, rhs.y) };
-	}
-};
 
 bool add_sand(std::string& map, int index, int line_width, int height)
 {
