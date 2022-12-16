@@ -22,21 +22,8 @@ struct node
 	{
 	}
 
-	void make_fast_forward_link(node& neighbor, link& merged_link)
-	{
-		for (auto& link : links)
-		{
-			if (&link.target.get() == &neighbor)
-			{
-				link.target = merged_link.target;
-				link.distance += merged_link.distance;
-			}
-		}
-	}
-
 	std::string name;
 	int id;
-	char label;
 	float rate;
 	std::vector<std::reference_wrapper<node>> neighbors;
 	std::vector<int> distances;
@@ -80,6 +67,12 @@ struct cave_state
 	}
 };
 
+struct short_state
+{
+	int open_valves;
+	int total_gas;
+};
+
 struct full_state
 {
 	full_state() = default;
@@ -91,8 +84,6 @@ struct full_state
 	}
 
 	cave_state cave;
-
-	std::string way;
 	int gas_released = 0;
 	int step_left = 0;	
 	int gas_per_step = 0;
@@ -112,7 +103,15 @@ struct full_state
 	{
 		return gas_released + gas_per_step * step_left;
 	}
+
+	short_state get_short_state()
+	{
+		return { cave.open_valves, get_total_gas() };
+	}
 };
+
+using state_map = std::map<cave_state, full_state>;
+std::vector<state_map> states;
 
 node& get_node(std::string key)
 {
@@ -131,11 +130,20 @@ void clear_globals()
 {
 	nodes.clear();
 	map.clear();
+	states.clear();
+}
+
+void reset_ids()
+{
+	int id = 0;
+	for (node& cur : nodes)
+	{
+		cur.id = id++;
+	}
 }
 
 void parse_input(input& input)
 {
-	int id = 0;
 	for (auto& line : input.lines)
 	{
 		std::string_view view = line;
@@ -143,7 +151,6 @@ void parse_input(input& input)
 		auto name = line.substr(6, 2);
 
 		auto& node = get_node(name);
-		node.id = id++;
 		nodes.push_back(node);
 		node.rate = std::atoi(line.c_str() + line.find('=') + 1);
 
@@ -156,6 +163,8 @@ void parse_input(input& input)
 			node.neighbors.push_back(neighbor);
 		}
 	}
+
+	reset_ids();
 }
 
 void simplify_graph()
@@ -221,34 +230,16 @@ void simplify_graph()
 			}
 		}
 	}
-}
 
-void reset_ids()
-{
-	int id = 0;
-	for (node& cur : nodes)
-	{
-		cur.id = id++;
-		cur.label = cur.id + 'A';
-	}
-}
-
-puzzle<16, 1> X = [](input& input) -> output
-{
-	clear_globals();
-	parse_input(input);
-	simplify_graph();
 	reset_ids();
+}
 
-
-	constexpr int max_steps = 30;
-
+void fill_states(int max_steps)
+{
 	node& start_node = map.find("AA")->second;
 	cave_state start_cave_state{ 0, start_node.id };
 	full_state start_state(start_cave_state, max_steps);
 
-	using state_map = std::map<cave_state, full_state>;
-	std::vector<state_map> states;
 	states.resize(max_steps + 1);
 
 	auto try_set = [&](full_state& state)
@@ -296,6 +287,14 @@ puzzle<16, 1> X = [](input& input) -> output
 			}
 		}
 	}
+}
+
+puzzle<16, 1> X = [](input& input) -> output
+{
+	clear_globals();
+	parse_input(input);
+	simplify_graph();
+	fill_states(30);
 
 	auto best_gas_released = 0;
 	for (auto& step : states)
@@ -305,7 +304,36 @@ puzzle<16, 1> X = [](input& input) -> output
 			best_gas_released = std::max(best_gas_released, pair.second.get_total_gas());
 		}
 	}
+	return best_gas_released;
+};
+	
+puzzle<16, 2> X = [](input& input)->output
+{
+	clear_globals();
+	parse_input(input);
+	simplify_graph();
+	fill_states(26);
 
+	std::vector<short_state> last_states;
+	for (auto& state : states[0])
+	{
+		last_states.push_back(state.second.get_short_state());
+	}
+
+	auto best_gas_released = 0;
+	for (int i = 0; i < last_states.size(); i++)
+	{
+		auto& a = last_states[i];
+		for (int j = i + 1; j < last_states.size(); j++)
+		{
+			auto& b = last_states[j];
+			if ((a.open_valves & b.open_valves) == 0)
+			{
+				auto gas_released = a.total_gas + b.total_gas;
+				best_gas_released = std::max(best_gas_released, gas_released);
+			}
+		}
+	}
 
 	return best_gas_released;
 };
