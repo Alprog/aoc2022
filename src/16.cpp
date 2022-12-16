@@ -43,48 +43,76 @@ struct node
 	std::vector<link> links;
 };
 
-struct state
-{
-	int opened;
-	int place;
+std::vector<std::reference_wrapper<node>> nodes;
+std::map<std::string, std::reference_wrapper<node>> map;
 
-	bool operator<(const state& rhs) const
+struct cave_state
+{
+	int open_valves;
+	int cur_place;
+
+	bool operator<(const cave_state& rhs) const
 	{
-		if (opened < rhs.opened)
+		if (open_valves < rhs.open_valves)
 		{
 			return true;
 		}
-		else if (opened > rhs.opened)
+		else if (open_valves > rhs.open_valves)
 		{
 			return false;
 		}
-		return place < rhs.place;
+		return cur_place < rhs.cur_place;
 	}
 
-	state get_moved_state(int new_place)
+	cave_state get_moved_state(int new_place)
 	{
-		return { opened, new_place };
+		return { open_valves, new_place };
 	}
 
-	state get_opened_state()
+	cave_state get_opened_state()
 	{
-		return { opened | (1 << place), place };
+		return { open_valves | (1 << cur_place), cur_place };
 	}
 
-	bool is_opened()
+	bool is_current_opened()
 	{
-		return (opened & (1 << place)) != 0;
+		return (open_valves & (1 << cur_place)) != 0;
 	}
 };
 
-struct path
+struct full_state
 {
-	std::string way;
-	int total_cost;
-};
+	full_state() = default;
 
-std::vector<std::reference_wrapper<node>> nodes;
-std::map<std::string, std::reference_wrapper<node>> map;
+	full_state(cave_state cave, int step_left)
+		: cave{ cave }
+		, step_left{ step_left }
+	{
+	}
+
+	cave_state cave;
+
+	std::string way;
+	int gas_released = 0;
+	int step_left = 0;	
+	int gas_per_step = 0;
+
+	void wait(int steps)
+	{
+		gas_released += gas_per_step * steps;
+		step_left -= steps;
+	}
+
+	node& get_current_node()
+	{
+		return nodes[cave.cur_place];
+	}
+
+	int get_total_gas() 
+	{
+		return gas_released + gas_per_step * step_left;
+	}
+};
 
 node& get_node(std::string key)
 {
@@ -99,11 +127,14 @@ node& get_node(std::string key)
 	return *new_node;
 }
 
-puzzle<16, 1> X = [](input& input) -> output
+void clear_globals()
 {
 	nodes.clear();
 	map.clear();
+}
 
+void parse_input(input& input)
+{
 	int id = 0;
 	for (auto& line : input.lines)
 	{
@@ -125,7 +156,10 @@ puzzle<16, 1> X = [](input& input) -> output
 			node.neighbors.push_back(neighbor);
 		}
 	}
+}
 
+void simplify_graph()
+{
 	for (node& cur : nodes)
 	{
 		cur.distances.resize(nodes.size(), -1);
@@ -135,7 +169,7 @@ puzzle<16, 1> X = [](input& input) -> output
 			cur.distances[neighbor.id] = 1;
 		}
 	}
-	
+
 	bool changed = true;
 	while (changed)
 	{
@@ -187,26 +221,91 @@ puzzle<16, 1> X = [](input& input) -> output
 			}
 		}
 	}
+}
 
-	id = 0;
+void reset_ids()
+{
+	int id = 0;
 	for (node& cur : nodes)
 	{
 		cur.id = id++;
 		cur.label = cur.id + 'A';
 	}
-	
-	constexpr int max_steps = 31;
+}
 
-	state start_state{ 0, start_node.id };
+puzzle<16, 1> X = [](input& input) -> output
+{
+	clear_globals();
+	parse_input(input);
+	simplify_graph();
+	reset_ids();
 
 
-	using state_map = std::map<state, path>;
+	constexpr int max_steps = 30;
+
+	node& start_node = map.find("AA")->second;
+	cave_state start_cave_state{ 0, start_node.id };
+	full_state start_state(start_cave_state, max_steps);
+
+	using state_map = std::map<cave_state, full_state>;
 	std::vector<state_map> states;
-	states[0][start_state] = { "", 0 };
+	states.resize(max_steps + 1);
 
-	states.resize(max_steps);
+	auto try_set = [&](full_state& state)
+	{
+		if (state.step_left >= 0)
+		{
+			auto& map = states[state.step_left];
+			auto it = map.find(state.cave);
+			if (it != map.end())
+			{
+				if (it->second.get_total_gas() >= state.get_total_gas())
+				{
+					return;
+				}
+			}
+			map[state.cave] = state;
+		}
+	};
 
 
+	states.back()[start_cave_state] = start_state;
 
-	return 0;
+	for (auto step = max_steps; step > 0; step--)
+	{
+		for (auto& pair : states[step])
+		{
+			auto& state = pair.second;
+			auto& cur_node = state.get_current_node();
+
+			if (cur_node.rate > 0 && !state.cave.is_current_opened())
+			{
+				full_state new_state = state;
+				new_state.cave = state.cave.get_opened_state();
+				new_state.wait(1);
+				new_state.gas_per_step += cur_node.rate;
+				try_set(new_state);
+			}
+
+			for (auto& link : cur_node.links)
+			{
+				full_state new_state = state;
+				new_state.cave = state.cave.get_moved_state(link.target.get().id);
+				new_state.wait(link.distance);
+				try_set(new_state);
+			}
+		}
+	}
+
+	auto best_gas_released = 0;
+	for (auto& step : states)
+	{
+		for (auto& pair : step)
+		{
+			best_gas_released = std::max(best_gas_released, pair.second.get_total_gas());
+		}
+	}
+
+
+	return best_gas_released;
 };
