@@ -3,6 +3,15 @@
 #include "string_utils.h"
 #include <functional>
 #include <map>
+#include <set>
+
+struct node;
+
+struct link
+{
+	std::reference_wrapper<node> target;
+	int distance;
+};
 
 struct node
 {
@@ -13,19 +22,65 @@ struct node
 	{
 	}
 
+	void make_fast_forward_link(node& neighbor, link& merged_link)
+	{
+		for (auto& link : links)
+		{
+			if (&link.target.get() == &neighbor)
+			{
+				link.target = merged_link.target;
+				link.distance += merged_link.distance;
+			}
+		}
+	}
+
 	std::string name;
 	int id;
 	char label;
 	float rate;
 	std::vector<std::reference_wrapper<node>> neighbors;
 	std::vector<int> distances;
+	std::vector<link> links;
+};
+
+struct state
+{
+	int opened;
+	int place;
+
+	bool operator<(const state& rhs) const
+	{
+		if (opened < rhs.opened)
+		{
+			return true;
+		}
+		else if (opened > rhs.opened)
+		{
+			return false;
+		}
+		return place < rhs.place;
+	}
+
+	state get_moved_state(int new_place)
+	{
+		return { opened, new_place };
+	}
+
+	state get_opened_state()
+	{
+		return { opened | (1 << place), place };
+	}
+
+	bool is_opened()
+	{
+		return (opened & (1 << place)) != 0;
+	}
 };
 
 struct path
 {
-	std::string name;
+	std::string way;
 	int total_cost;
-	int total_rate;
 };
 
 std::vector<std::reference_wrapper<node>> nodes;
@@ -71,8 +126,6 @@ puzzle<16, 1> X = [](input& input) -> output
 		}
 	}
 
-
-
 	for (node& cur : nodes)
 	{
 		cur.distances.resize(nodes.size(), -1);
@@ -83,33 +136,27 @@ puzzle<16, 1> X = [](input& input) -> output
 		}
 	}
 	
-	while (true)
+	bool changed = true;
+	while (changed)
 	{
-		int holes = 0;
-
+		changed = false;
 		for (node& cur : nodes)
 		{
 			for (int i = 0; i < nodes.size(); i++)
 			{
 				if (cur.distances[i] == -1)
 				{
-					holes++;
 					for (node& neighbor : cur.neighbors)
 					{
-						if (neighbor.distances[i] != -1)
+						if (neighbor.rate == 0 && neighbor.distances[i] != -1)
 						{
 							cur.distances[i] = neighbor.distances[i] + 1;
-							holes--;
+							changed = true;
 							break;
 						}
 					}
 				}
 			}
-		}
-
-		if (holes == 0)
-		{
-			break;
 		}
 	}
 
@@ -130,13 +177,34 @@ puzzle<16, 1> X = [](input& input) -> output
 		}
 	}
 
-	char label = 'A';
 	for (node& cur : nodes)
 	{
-		cur.label = label++;
+		for (int i = 0; i < nodes.size(); i++)
+		{
+			if (cur.distances[i] > 0)
+			{
+				cur.links.emplace_back(nodes[i], cur.distances[i]);
+			}
+		}
+	}
+
+	id = 0;
+	for (node& cur : nodes)
+	{
+		cur.id = id++;
+		cur.label = cur.id + 'A';
 	}
 	
-	std::map<std::string, path> pathes;
+	constexpr int max_steps = 31;
+
+	state start_state{ 0, start_node.id };
+
+
+	using state_map = std::map<state, path>;
+	std::vector<state_map> states;
+	states[0][start_state] = { "", 0 };
+
+	states.resize(max_steps);
 
 
 
