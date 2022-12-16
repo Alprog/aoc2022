@@ -1,5 +1,7 @@
 #pragma once
 
+#include <compare>
+
 struct vector2
 {
 	int x = 0;
@@ -13,5 +15,5 @@ struct vector2
 	static vector2 min(vector2& lhs, vector2& rhs);
 	static vector2 max(vector2& lhs, vector2& rhs);
 
-	bool operator<(const vector2& rhs) const;
+	std::strong_ordering operator<=>(const vector2& rhs) const;
 };

@@ -38,17 +38,14 @@ struct cave_state
 	int open_valves;
 	int cur_place;
 
-	bool operator<(const cave_state& rhs) const
+	auto operator<=>(const cave_state& rhs) const
 	{
-		if (open_valves < rhs.open_valves)
+		auto result = open_valves <=> rhs.open_valves;
+		if (result == std::strong_ordering::equal)
 		{
-			return true;
+			result = cur_place <=> rhs.cur_place;
 		}
-		else if (open_valves > rhs.open_valves)
-		{
-			return false;
-		}
-		return cur_place < rhs.cur_place;
+		return result;
 	}
 
 	cave_state get_moved_state(int new_place)

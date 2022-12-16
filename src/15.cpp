@@ -22,9 +22,9 @@ struct range
 		return end - start + 1;
 	}
 
-	bool operator<(const range& rhs) const
+	auto operator<=>(const range& rhs) const
 	{
-		return end < rhs.end;
+		return end <=> rhs.end;
 	}
 
 	static range merge(range& a, range& b)

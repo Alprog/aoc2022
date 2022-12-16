@@ -27,7 +27,7 @@ vector2 vector2::max(vector2& lhs, vector2& rhs)
 	return { std::max(lhs.x, rhs.x), std::max(lhs.y, rhs.y) };
 }
 
-bool vector2::operator<(const vector2& rhs) const
+std::strong_ordering vector2::operator<=>(const vector2& rhs) const
 {
-	return (x << 16) + y < (rhs.x << 16) + rhs.y;
+	return (x << 16) + y <=> (rhs.x << 16) + rhs.y;
 }
