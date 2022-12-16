@@ -128,6 +128,10 @@ node& get_node(std::string key)
 
 void clear_globals()
 {
+	for (auto& pair : map)
+	{
+		delete &pair.second.get();
+	}
 	nodes.clear();
 	map.clear();
 	states.clear();
@@ -291,7 +295,6 @@ void fill_states(int max_steps)
 
 puzzle<16, 1> X = [](input& input) -> output
 {
-	clear_globals();
 	parse_input(input);
 	simplify_graph();
 	fill_states(30);
@@ -304,12 +307,13 @@ puzzle<16, 1> X = [](input& input) -> output
 			best_gas_released = std::max(best_gas_released, pair.second.get_total_gas());
 		}
 	}
+
+	clear_globals();
 	return best_gas_released;
 };
 	
 puzzle<16, 2> X = [](input& input)->output
 {
-	clear_globals();
 	parse_input(input);
 	simplify_graph();
 	fill_states(26);
@@ -335,5 +339,6 @@ puzzle<16, 2> X = [](input& input)->output
 		}
 	}
 
+	clear_globals();
 	return best_gas_released;
 };
