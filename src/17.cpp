@@ -66,9 +66,7 @@ puzzle<17> X = [](input& input) -> output
 	figure wall(wall_pattern, wall_pattern, wall_pattern, wall_pattern);
 
 	std::vector<uint16_t> stack;
-	std::vector<uint16_t> walls;
 	stack.resize(10000, wall_pattern);
-	walls.resize(10000, wall_pattern);
 	stack[0] = -1; // floor
 
 	int figure_index = -1;
