@@ -20,19 +20,22 @@ struct vector3
 	}
 };
 
+using to_vec_func = std::function<vector3(int, int, int)>;
+auto to_vectorA(int x, int y, int z) {return vector3{ x, y, z }; };
+auto to_vectorB(int x, int y, int z) {return vector3{ z, x, y }; };
+auto to_vectorC(int x, int y, int z) {return vector3{ y, z, x }; };
+
 puzzle<18, 1> X = [](input& input) -> output
 {
-	int width = 20;
-	int height = 20;
-	int depth = 20;
-	int slice = height * depth;
+	int size = 20;
+	int slice = size * size;
 	
 	std::vector<bool> map;
-	map.resize(width * height * depth, false);
+	map.resize(size * size * size, false);
 	
 	auto to_index = [&](vector3 pos)
 	{
-		return pos.x * slice + pos.y * depth + pos.z;
+		return pos.x * slice + pos.y * size + pos.z;
 	};
 
 	std::vector<vector3> cubes;
@@ -48,76 +51,46 @@ puzzle<18, 1> X = [](input& input) -> output
 
 	int total = 0;
 
-	bool prev = false;
-	for (int x = 0; x < width; x++)
+	auto search = [&](to_vec_func to_vector)
 	{
-		for (int y = 0; y < height; y++)
+		bool prev = false;
+		for (int x = 0; x < size; x++)
 		{
-			for (int z = 0; z < depth; z++)
+			for (int y = 0; y < size; y++)
 			{
-				auto cur = map[to_index({ x, y, z })];
-				if (prev != cur)
+				for (int z = 0; z < size; z++)
 				{
-					total += 1;
-				}
+					auto pos = to_vector(x, y, z);
+					auto cur = map[to_index(pos)];
+					if (prev != cur)
+					{
+						total += 1;
+					}
 
-				prev = cur;
+					prev = cur;
+				}
 			}
 		}
-	}
+	};
 
-	prev = false;
-	for (int x = 0; x < width; x++)
-	{
-		for (int z = 0; z < depth; z++)
-		{
-			for (int y = 0; y < height; y++)
-			{
-				auto cur = map[to_index({ x, y, z })];
-				if (prev != cur)
-				{
-					total += 1;
-				}
-
-				prev = cur;
-			}
-		}
-	}
-
-	prev = false;
-	for (int y = 0; y < height; y++)
-	{
-		for (int z = 0; z < depth; z++)
-		{
-			for (int x = 0; x < width; x++)
-			{
-				auto cur = map[to_index({ x, y, z })];
-				if (prev != cur)
-				{
-					total += 1;
-				}
-
-				prev = cur;
-			}
-		}
-	}
+	search(to_vectorA);
+	search(to_vectorB);
+	search(to_vectorC);
 
 	return total;
 };
 
 puzzle<18, 2> X = [](input& input) -> output
 {
-	int width = 20;
-	int height = 20;
-	int depth = 20;
-	int slice = height * depth;
+	int size = 20;
+	int slice = size * size;
 
 	std::vector<char> map;
-	map.resize(width * height * depth, '.');
+	map.resize(size * size * size, '.');
 
 	auto to_index = [&](vector3 pos)
 	{
-		return pos.x * slice + pos.y * depth + pos.z;
+		return pos.x * slice + pos.y * size + pos.z;
 	};
 
 	std::vector<vector3> cubes;
@@ -136,7 +109,7 @@ puzzle<18, 2> X = [](input& input) -> output
 	auto check = [&](vector3 pos, vector3 offset)
 	{
 		auto np = pos + offset;
-		if (np.x >= 0 && np.x < width && np.y >= 0 && np.y < height && np.z >= 0 && np.z < depth)
+		if (np.x >= 0 && np.x < size && np.y >= 0 && np.y < size && np.z >= 0 && np.z < size)
 		{
 			if (map[to_index(np)] == '0')
 			{
@@ -152,11 +125,11 @@ puzzle<18, 2> X = [](input& input) -> output
 	while (changed)
 	{
 		changed = false;
-		for (int x = 0; x < width; x++)
+		for (int x = 0; x < size; x++)
 		{
-			for (int y = 0; y < height; y++)
+			for (int y = 0; y < size; y++)
 			{
-				for (int z = 0; z < depth; z++)
+				for (int z = 0; z < size; z++)
 				{
 					vector3 pos = { x,y, z };
 					auto cur = map[to_index(pos)];
@@ -169,85 +142,35 @@ puzzle<18, 2> X = [](input& input) -> output
 		}
 	}
 
-
 	int total = 0;
-
-	char prev = false;
-	for (int x = 0; x < width; x++)
+	auto search = [&](to_vec_func to_vector)
 	{
-		for (int y = 0; y < height; y++)
+		char prev = false;
+		for (int x = 0; x < size; x++)
 		{
-			for (int z = 0; z < depth; z++)
+			for (int y = 0; y < size; y++)
 			{
-				auto cur = map[to_index({ x, y, z })];
-				if (prev != cur)
+				for (int z = 0; z < size; z++)
 				{
-					if ((cur == '#' && prev == '0') || (cur == '0' && prev == '#'))
+					auto pos = to_vector(x, y, z);
+					auto cur = map[to_index(pos)];
+					if (prev != cur)
 					{
-						total += 1;
+						if ((cur == '#' && prev == '0') || (cur == '0' && prev == '#'))
+						{
+							total += 1;
+						}
 					}
-				}
 
-				prev = cur;
+					prev = cur;
+				}
 			}
 		}
-	}
+	};
 
-	prev = false;
-	for (int x = 0; x < width; x++)
-	{
-		for (int z = 0; z < depth; z++)
-		{
-			for (int y = 0; y < height; y++)
-			{
-				auto cur = map[to_index({ x, y, z })];
-				if (prev != cur)
-				{
-					if ((cur == '#' && prev == '0') || (cur == '0' && prev == '#'))
-					{
-						total += 1;
-					}
-				}
-
-				prev = cur;
-			}
-		}
-	}
-
-	prev = false;
-	for (int y = 0; y < height; y++)
-	{
-		for (int z = 0; z < depth; z++)
-		{
-			for (int x = 0; x < width; x++)
-			{
-				auto cur = map[to_index({ x, y, z })];
-				if (prev != cur)
-				{
-					if ((cur == '#' && prev == '0') || (cur == '0' && prev == '#'))
-					{
-						total += 1;
-					}
-				}
-
-				prev = cur;
-			}
-		}
-	}
-
-	//for (int x = 0; x < width; x++)
-	//{
-	//	for (int y = 0; y < height; y++)
-	//	{
-	//		for (int z = 0; z < depth; z++)
-	//		{
-	//			std::cout << map[to_index({ x, y, z })];
-	//		}
-	//		std::cout << std::endl;
-	//	}
-	//	std::cout << std::endl;
-	//	std::cout << std::endl;
-	//}
+	search(to_vectorA);
+	search(to_vectorB);
+	search(to_vectorC);
 
 	return total;
 };
