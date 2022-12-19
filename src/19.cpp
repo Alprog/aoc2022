@@ -40,6 +40,7 @@ enum class order
 
 struct state
 {
+	int best_id = 0;
 	int minutes_left = 0;
 	resources balance = 0;
 	resources per_minute = 0;
@@ -105,6 +106,7 @@ order compare(state& a, state& b)
 
 struct blueprint
 {
+	int id = 0;
 	resources cost = 0;
 	resources increase = 0;
 };
@@ -142,6 +144,12 @@ std::vector<std::vector<state>> steps;
 
 void try_open(state state, blueprint& blueprint)
 {
+	/*if (state.best_id > blueprint.id)
+	{
+		return;
+	}
+	state.best_id = blueprint.id;*/
+
 	auto wait_time = state.get_wait_time(blueprint.cost) + 1;
 	if (wait_time < state.minutes_left)
 	{
@@ -186,6 +194,14 @@ void work2(state start_state)
 			}
 		}
 	}
+
+	for (auto& step : steps)
+	{
+		for (auto& s : step)
+		{
+			best_geode = std::max(best_geode, s.get_geode_count());
+		}
+	}
 }
 
 puzzle<19, 1> X = [](input& input) -> output
@@ -193,6 +209,12 @@ puzzle<19, 1> X = [](input& input) -> output
 	steps.clear();
 
 	blueprints.resize(4);
+
+	blueprints[0].id = 0;
+	blueprints[1].id = 1;
+	blueprints[2].id = 2;
+	blueprints[3].id = 3;
+
 	blueprints[0].increase = { 1, 0, 0, 0 };
 	blueprints[1].increase = { 0, 1, 0, 0 };
 	blueprints[2].increase = { 0, 0, 1, 0 };
@@ -210,7 +232,7 @@ puzzle<19, 1> X = [](input& input) -> output
 
 		best_geode = 0;
 		state state;
-		state.minutes_left = 32;
+		state.minutes_left = 24;
 		state.per_minute.res[0] = 1;
 		work2(state);
 
