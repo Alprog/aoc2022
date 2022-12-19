@@ -19,11 +19,6 @@ struct resources
 		res[3] = geode;
 	}
 
-	resources operator+(const resources& rhs)
-	{
-		return resources(all + rhs.all);
-	}
-
 	union
 	{
 		uint16_t res[4];
@@ -31,16 +26,8 @@ struct resources
 	};
 };
 
-enum class order
-{
-	unordered = 0,
-	less_or_equal = 1,
-	greater = 2,
-};
-
 struct state
 {
-	int best_id = 0;
 	int minutes_left = 0;
 	resources balance = 0;
 	resources per_minute = 0;
@@ -86,60 +73,14 @@ struct state
 	std::string name;
 };
 
-order compare(state& a, state& b)
-{
-	bool less = false;
-	bool greater = false;
-	for (int i = 0; i < 4; i++)
-	{
-		less |= a.balance.res[i] < b.balance.res[i];
-		less |= a.per_minute.res[i] < b.per_minute.res[i];
-		greater |= a.balance.res[i] > b.balance.res[i];
-		greater |= a.per_minute.res[i] > b.per_minute.res[i];
-	}
-	if (less && greater)
-	{
-		return order::unordered;
-	}
-	return greater ? order::greater : order::less_or_equal;
-}
-
 struct blueprint
 {
-	int id = 0;
 	resources cost = 0;
 	resources increase = 0;
 };
 
+int best_geode_count = 0;
 std::vector<blueprint> blueprints;
-
-void work(state state);
-
-void try_work(state state, blueprint& blueprint)
-{
-	auto wait_time = state.get_wait_time(blueprint.cost) + 1;
-	if (wait_time < state.minutes_left)
-	{
-		state.wait(wait_time);
-		state.balance.all -= blueprint.cost.all;
-		state.per_minute.all += blueprint.increase.all;
-		work(state);
-	}
-}
-
-int best_geode = 0;
-
-void work(state state)
-{
-	for (auto& blueprint : blueprints)
-	{
-		try_work(state, blueprint);
-	}
-
-	int count = state.get_geode_count();
-	best_geode = std::max(best_geode, count);
-}
-
 std::vector<std::vector<state>> steps;
 
 void try_open(state state, blueprint& blueprint)
@@ -152,34 +93,21 @@ void try_open(state state, blueprint& blueprint)
 		state.per_minute.all += blueprint.increase.all;
 
 		auto& step = steps[state.minutes_left];
-		//for (int i = step.size() - 1; i >= 0; i--)
-		//{
-		//	auto cmp = compare(state, step[i]);
-		//	if (cmp == order::less_or_equal)
-		//	{
-		//		return;
-		//	}
-		//	else if (cmp == order::greater)
-		//	{
-		//		step[i] = step.back();
-		//		step.pop_back();
-		//	}
-		//}
 		step.push_back(state);
 	}
 }
 
 void clear_step(std::vector<state>& step)
 {
-	auto best_g = 0;
+	uint16_t best_g = 0;
 	for (auto& s : step)
 	{
-		best_g = std::max(best_g, s.get_geode_count());
+		best_g = std::max(best_g, s.per_minute.res[3]);
 	}
 
 	for (int i = step.size() - 1; i >= 0; i--)
 	{
-		if (step[i].get_geode_count() < best_g - 17)
+		if (step[i].per_minute.res[3] < best_g)
 		{
 			step[i] = step.back();
 			step.pop_back();
@@ -187,13 +115,13 @@ void clear_step(std::vector<state>& step)
 	}
 }
 
-
-void work2(state start_state) 
+void work(state start_state) 
 {
+	steps.clear();
 	steps.resize(start_state.minutes_left + 1);
 	for (auto& step : steps)
 	{
-		step.reserve(1000000);
+		step.reserve(500'000);
 	}
 	steps.back().push_back(start_state);
 
@@ -201,10 +129,7 @@ void work2(state start_state)
 	{
 		auto& step = steps[i];
 
-		std::cout << i << " " << step.size() << std::endl;
 		clear_step(step);
-		std::cout << i << " " << step.size() << std::endl;
-
 
 		if (step.size() > 0)
 		{
@@ -222,82 +147,72 @@ void work2(state start_state)
 	{
 		for (auto& s : step)
 		{
-			best_geode = std::max(best_geode, s.get_geode_count());
+			best_geode_count = std::max(best_geode_count, s.get_geode_count());
 		}
 	}
 }
 
-//puzzle<19, 1> X = [](input& input) -> output
-//{
-//	steps.clear();
-//
-//	blueprints.resize(4);
-//
-//	blueprints[0].id = 0;
-//	blueprints[1].id = 1;
-//	blueprints[2].id = 2;
-//	blueprints[3].id = 3;
-//
-//	blueprints[0].increase = { 1, 0, 0, 0 };
-//	blueprints[1].increase = { 0, 1, 0, 0 };
-//	blueprints[2].increase = { 0, 0, 1, 0 };
-//	blueprints[3].increase = { 0, 0, 0, 1 };
-//
-//	int total = 0;
-//	int index = 0;
-//	for (auto& line : input.lines)
-//	{
-//		auto arr = str_utils::split(line, " ");
-//		blueprints[0].cost = { std::atoi(arr[6].c_str()), 0, 0, 0};
-//		blueprints[1].cost = { std::atoi(arr[12].c_str()), 0, 0, 0 };
-//		blueprints[2].cost = { std::atoi(arr[18].c_str()), std::atoi(arr[21].c_str()), 0, 0 };
-//		blueprints[3].cost = { std::atoi(arr[27].c_str()), 0, std::atoi(arr[30].c_str()), 0 };
-//
-//		best_geode = 0;
-//		state state;
-//		state.minutes_left = 24;
-//		state.per_minute.res[0] = 1;
-//		work2(state);
-//
-//		std::cout << best_geode << std::endl;
-//	
-//		total += best_geode * ++index;
-//	}
-//
-//	return total;
-//};
-
-puzzle<19, 2> X = [](input& input) -> output
+void init_blueprints()
 {
 	blueprints.resize(4);
 	blueprints[0].increase = { 1, 0, 0, 0 };
 	blueprints[1].increase = { 0, 1, 0, 0 };
 	blueprints[2].increase = { 0, 0, 1, 0 };
 	blueprints[3].increase = { 0, 0, 0, 1 };
+}
 
-	std::vector<int> totals;
-	totals.resize(3, 1);
-	
+void parse_line(std::string& line)
+{
+	auto arr = str_utils::split(line, " ");
+	blueprints[0].cost = { std::atoi(arr[6].c_str()), 0, 0, 0 };
+	blueprints[1].cost = { std::atoi(arr[12].c_str()), 0, 0, 0 };
+	blueprints[2].cost = { std::atoi(arr[18].c_str()), std::atoi(arr[21].c_str()), 0, 0 };
+	blueprints[3].cost = { std::atoi(arr[27].c_str()), 0, std::atoi(arr[30].c_str()), 0 };
+}
+
+puzzle<19, 1> X = [](input& input) -> output
+{
+	init_blueprints();
+
+	int total = 0;
 	int index = 0;
+	for (auto& line : input.lines)
+	{
+		parse_line(line);
+
+		best_geode_count = 0;
+		state state;
+		state.minutes_left = 24;
+		state.per_minute.res[0] = 1;
+		work(state);
+
+		total += best_geode_count * ++index;
+	}
+
+	return total;
+};
+
+puzzle<19, 2> X = [](input& input) -> output
+{
+	init_blueprints();
+
+	std::vector<int> totals = { 1, 1, 1 };
+	
 	int line_count = input.lines.size();
 	line_count = std::min(line_count, 3);
 	for (int i = 0; i < line_count; i++)
 	{
-		auto arr = str_utils::split(input.lines[i], " ");
-		blueprints[0].cost = { std::atoi(arr[6].c_str()), 0, 0, 0 };
-		blueprints[1].cost = { std::atoi(arr[12].c_str()), 0, 0, 0 };
-		blueprints[2].cost = { std::atoi(arr[18].c_str()), std::atoi(arr[21].c_str()), 0, 0 };
-		blueprints[3].cost = { std::atoi(arr[27].c_str()), 0, std::atoi(arr[30].c_str()), 0 };
+		parse_line(input.lines[i]);
 
-		best_geode = 0;
+		best_geode_count = 0;
 		state state;
 		state.minutes_left = 32;
 		state.per_minute.res[0] = 1;
-		work2(state);
+		work(state);
 
-		std::cout << best_geode << std::endl;
+		std::cout << best_geode_count << " " << std::endl;
 
-		totals.push_back(best_geode);
+		totals[i] = best_geode_count;
 	}
 
 	return totals[0] * totals[1] * totals[2];
