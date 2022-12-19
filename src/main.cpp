@@ -3,7 +3,7 @@
 #include <fstream>
 #include <format>
 
-constexpr bool run_only_last_puzzle = false;
+constexpr bool run_only_last_puzzle = true;
 
 constexpr int part_count = 2;
 
