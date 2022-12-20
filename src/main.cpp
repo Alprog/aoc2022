@@ -26,6 +26,7 @@ void run_puzzle(int day, int part, std::string& filename, std::string& fallback_
 
 	input input;
 	input.current_part = part;
+	input.is_test = is_test;
 	read_all_lines(filename, input.lines);
 	if (input.lines.empty())
 	{

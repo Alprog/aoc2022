@@ -12,6 +12,7 @@ struct input
 	std::vector<std::string> lines;
 	int current_part;
 
+	bool is_test;
 	bool is_part_one() const;
 	bool is_part_two() const;
 };
