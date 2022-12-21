@@ -29,6 +29,39 @@ int64_t operation(int64_t a, int64_t b, char operation)
 	}
 }
 
+void add_monkeys(std::vector<monkey_op>& monkeys, std::string c, std::string a, char operation, std::string b)
+{
+	if (c == "root")
+	{
+		monkeys.emplace_back(a, /* = */ b, '=', b);
+		monkeys.emplace_back(b, /* = */ a, '=', a);
+	}
+	else if (operation == '*')
+	{
+		monkeys.emplace_back(c, /* = */ a, '*', b);
+		monkeys.emplace_back(a, /* = */ c, '/', b);
+		monkeys.emplace_back(b, /* = */ c, '/', a);
+	}
+	else if (operation == '/')
+	{
+		monkeys.emplace_back(c, /* = */ a, '/', b);
+		monkeys.emplace_back(a, /* = */ c, '*', b);
+		monkeys.emplace_back(b, /* = */ a, '/', c);
+	}
+	else if (operation == '+')
+	{
+		monkeys.emplace_back(c, /* = */ a, '+', b);
+		monkeys.emplace_back(a, /* = */ c, '-', b);
+		monkeys.emplace_back(b, /* = */ c, '-', a);
+	}
+	else if (operation == '-')
+	{
+		monkeys.emplace_back(c, /* = */ a, '-', b);
+		monkeys.emplace_back(a, /* = */ c, '+', b);
+		monkeys.emplace_back(b, /* = */ a, '-', c);
+	}
+}
+
 puzzle<21> X = [](input& input) -> output
 {
 	std::map<std::string, int64_t> map;
@@ -38,49 +71,23 @@ puzzle<21> X = [](input& input) -> output
 	{
 		auto arr = str_utils::split(line, " ");
 		auto name = arr[0].substr(0, arr[0].size() - 1);
-		if (input.is_part_two() && name == "humn")
-		{
-			continue;
-		}
 		if (arr.size() == 2)
 		{
 			map[name] = std::atoi(arr[1].c_str());
 		}
+		else if (input.is_part_one())
+		{
+			monkeys.emplace_back(name, arr[1], arr[2][0], arr[3]);
+		}
 		else
 		{
-			auto& a = arr[1];
-			auto& b = arr[3];
-			auto& c = name;
-			char operation = arr[2][0];
-			if (input.is_part_two() && name == "root")
-			{
-				monkeys.emplace_back(a, b, '=', b);
-				monkeys.emplace_back(b, a, '=', a);
-				continue;
-			}
-			
-			monkeys.emplace_back(c, a, operation, b);
-			if (operation == '*')
-			{
-				monkeys.emplace_back(a, c, '/', b);
-				monkeys.emplace_back(b, c, '/', a);
-			}
-			else if (operation == '/')
-			{
-				monkeys.emplace_back(a, c, '*', b);
-				monkeys.emplace_back(b, a, '/', c);
-			}
-			else if (operation == '+')
-			{
-				monkeys.emplace_back(a, c, '-', b);
-				monkeys.emplace_back(b, c, '-', a);
-			}
-			else if (operation == '-')
-			{
-				monkeys.emplace_back(a, c, '+', b);
-				monkeys.emplace_back(b, a, '-', c);
-			}
+			add_monkeys(monkeys, name, arr[1], arr[2][0], arr[3]);
 		}
+	}
+
+	if (input.is_part_two())
+	{
+		map.erase("humn");
 	}
 
 	while (!monkeys.empty())
