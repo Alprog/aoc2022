@@ -8,8 +8,8 @@ struct monkey_op
 {
 	std::string name = "";
 	std::string a = "";
-	std::string b = "";
 	char operation = 0;
+	std::string b = "";
 };
 
 int64_t operation(int64_t a, int64_t b, char operation)
@@ -24,10 +24,12 @@ int64_t operation(int64_t a, int64_t b, char operation)
 			return a / b;
 		case '*':
 			return a * b;
+		case '=':
+			return a;
 	}
 }
 
-puzzle<21, 1> X = [](input& input) -> output
+puzzle<21> X = [](input& input) -> output
 {
 	std::map<std::string, int64_t> map;
 	std::vector<monkey_op> monkeys;
@@ -36,13 +38,48 @@ puzzle<21, 1> X = [](input& input) -> output
 	{
 		auto arr = str_utils::split(line, " ");
 		auto name = arr[0].substr(0, arr[0].size() - 1);
+		if (input.is_part_two() && name == "humn")
+		{
+			continue;
+		}
 		if (arr.size() == 2)
 		{
 			map[name] = std::atoi(arr[1].c_str());
 		}
 		else
 		{
-			monkeys.emplace_back( name, arr[1], arr[3], arr[2][0] );
+			auto& a = arr[1];
+			auto& b = arr[3];
+			auto& c = name;
+			char operation = arr[2][0];
+			if (input.is_part_two() && name == "root")
+			{
+				monkeys.emplace_back(a, b, '=', b);
+				monkeys.emplace_back(b, a, '=', a);
+				continue;
+			}
+			
+			monkeys.emplace_back(c, a, operation, b);
+			if (operation == '*')
+			{
+				monkeys.emplace_back(a, c, '/', b);
+				monkeys.emplace_back(b, c, '/', a);
+			}
+			else if (operation == '/')
+			{
+				monkeys.emplace_back(a, c, '*', b);
+				monkeys.emplace_back(b, a, '/', c);
+			}
+			else if (operation == '+')
+			{
+				monkeys.emplace_back(a, c, '-', b);
+				monkeys.emplace_back(b, c, '-', a);
+			}
+			else if (operation == '-')
+			{
+				monkeys.emplace_back(a, c, '+', b);
+				monkeys.emplace_back(b, a, '-', c);
+			}
 		}
 	}
 
@@ -62,7 +99,6 @@ puzzle<21, 1> X = [](input& input) -> output
 		}
 	}
 
-	int64_t root = map["root"];
-
-	return root;
+	return input.is_part_one() ? map["root"] : map["humn"];
 };
+
