@@ -6,10 +6,10 @@
 
 struct monkey_op
 {
-	std::string name = "";
-	std::string a = "";
-	char operation = 0;
-	std::string b = "";
+	std::string name;
+	std::string a;
+	char operation;
+	std::string b;
 };
 
 int64_t operation(int64_t a, int64_t b, char operation)
