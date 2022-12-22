@@ -38,7 +38,6 @@ int get_max_line_size(std::vector<std::string>& lines)
 int detect_resolution(std::vector<std::string>& lines)
 {
 	// there are only two possible aspects for cube net: 4:3 and 5:2
-
 	int side_a = get_max_line_size(lines);
 	int side_b = lines.size();
 	int min_size = std::min(side_a, side_b);
@@ -112,7 +111,7 @@ struct monkey_map
 	void add_wormhole(int place, int destination, int direction)
 	{
 		auto it = wormholes.find(place);
-		if (it != wormholes.end())
+		if (it == wormholes.end())
 		{
 			wormholes[place] = { destination, direction };
 		}
@@ -135,40 +134,41 @@ struct cursor
 
 	void move(int count)
 	{
-		int step = map.direction_steps[direction];
-
 		for (int i = 0; i < count; i++)
 		{
-			int new_index = index + step;
-			int new_direction = direction;
-			if (map.data[new_index] == ' ')
+			int step = map.direction_steps[direction];
+			int next_index = index + step;
+			int next_direction = direction;
+			if (map.data[next_index] == ' ')
 			{
-				new_index = pacman_teleport(new_index, step);
+				next_index = pacman_teleport(next_index, step);
 			}
-			else if (map.data[new_index] == '@')
+			else if (map.data[next_index] == '@')
 			{
-				auto& wormhole = map.wormholes[index];
+				auto& wormhole = map.wormholes[next_index];
 				if (wormhole.destinationA != index)
 				{
-					new_index = wormhole.destinationA;
-					new_direction = wormhole.directionA;
+					next_index = wormhole.destinationA;
+					next_direction = wormhole.directionA;
 				}
 				else
 				{
-					new_index = wormhole.destinationB;
-					new_direction = wormhole.directionB;
+					next_index = wormhole.destinationB;
+					next_direction = wormhole.directionB;
 				}
 			}
 
-			if (map.data[new_index] == '#')
+			if (map.data[next_index] == '#')
 			{
 				break;
 			}
 
 			draw_self();
-			index = new_index;
-			direction = new_direction;
+			index = next_index;
+			direction = next_direction;
 		}
+
+		draw_self();
 	}
 
 	int pacman_teleport(int index, int step)
@@ -388,21 +388,20 @@ void calculate_edge_anchors(cube& cube, monkey_map& map, int resolution)
 
 void setup_wormholes(cube& cube, monkey_map& map, int resolution)
 {
-	int global = '0';
+	int global = 'a';
 
 	for (auto& src_face : cube.faces)
 	{	
 		for (int src_net_edge = 0; src_net_edge < direction_count; src_net_edge++)
 		{
 			auto& src_anchor = src_face.edge_anchors[src_net_edge];
-			if (map.data[src_anchor] == ' ')
+			if (map.data[src_anchor] == ' ' || map.data[src_anchor] == '@')
 			{
 				auto src_local_direction = wrap(src_net_edge - src_face.net_rotation);
 				auto& link = src_face.links[src_local_direction];
 				face& dst_face = link.target;
 				
-				auto dst_local_direction = invert(link.direction);
-				auto dst_net_edge = wrap(dst_local_direction - dst_face.net_rotation);
+				auto dst_net_edge = wrap(dst_face.net_rotation + invert(link.direction));
 				
 				auto src_step = map.direction_steps[wrap(src_net_edge + 1)];
 				auto dst_step = map.direction_steps[wrap(dst_net_edge + 1)];
@@ -415,15 +414,13 @@ void setup_wormholes(cube& cube, monkey_map& map, int resolution)
 
 				for (int i = 0; i < resolution; i++)
 				{
-					map.data[src_anchor + i * src_step] = global;
-					map.data[dst_anchor - i * dst_step] = global++;
+					auto src_index = src_anchor + i * src_step;
+					auto dst_index = dst_anchor - i * dst_step;
+					map.data[src_index] = '@';
+					map.add_wormhole(src_index, dst_index, dst_net_direction);
 				}
-
-				
 			}
 		}
-
-		break;
 	}
 }
 
@@ -438,18 +435,12 @@ void solve_cube_wormholes(monkey_map& map, std::vector<std::string>& lines)
 	calculate_edge_anchors(cube, map, resolution);
 	setup_wormholes(cube, map, resolution);
 
-	//for (auto& face : cube.faces)
-	//{
-	//	std::cout << "face" << face.index << " rotated " << -face.net_rotation * 90 << " degree\n";
-	//}
-	std::cout << std::endl << minimap.data;
+	//uncomment to print minimap
+	//std::cout << std::endl << minimap.data;
 }
 
 puzzle<22> X = [](input& input) -> output
 {
-	if (!input.is_test)
-		return 0;
-
 	std::string sequence = input.lines.back();
 	input.lines.resize(input.lines.size() - 2);
 
@@ -459,9 +450,6 @@ puzzle<22> X = [](input& input) -> output
 	if (input.is_part_two())
 	{
 		solve_cube_wormholes(map, input.lines);
-
-		std::cout << std::endl << map.data;
-		return 0;
 	}
 
 	int value = 0;
@@ -488,6 +476,7 @@ puzzle<22> X = [](input& input) -> output
 	
 	cursor.draw_self();
 
+	//uncomment to print path
 	//std::cout << map.data;
 
 	auto pos = map.to_position(cursor.index);
