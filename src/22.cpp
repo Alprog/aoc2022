@@ -20,6 +20,35 @@ int wrap(int direction)
 	return (direction + direction_count) % direction_count;
 }
 
+int get_max_line_size(std::vector<std::string>& lines)
+{
+	size_t max = 0;
+	for (auto& line : lines)
+	{
+		max = std::max(max, line.size());
+	}
+	return max;
+}
+
+int detect_resolution(std::vector<std::string>& lines)
+{
+	// there are only two possible aspects for cube net: 4:3 and 5:2
+
+	int side_a = get_max_line_size(lines);
+	int side_b = lines.size();
+	int min_size = std::min(side_a, side_b);
+	int max_size = std::max(side_a, side_b);
+	if (min_size * 4 == max_size * 3)
+	{
+		return max_size / 4;
+	}
+	else if (min_size * 5 == max_size * 2)
+	{
+		return max_size / 5;
+	}
+	return -1;
+}
+
 struct wormhole
 {
 	int destination;
@@ -28,13 +57,15 @@ struct wormhole
 
 struct monkey_map
 {
+	int width;
+	int height;
+	std::string data;
+	std::vector<int> direction_steps;
+	std::map<int, wormhole> wormholes;
+
 	monkey_map(std::vector<std::string>& lines, bool sentinel)
 	{
-		width = 0;
-		for (auto& line : lines)
-		{
-			width = std::max(width, (int)line.size());
-		}
+		width = get_max_line_size(lines);
 		height = lines.size();
 
 		if (sentinel)
@@ -58,7 +89,7 @@ struct monkey_map
 			data[width * (i + 1) - 1] = '\n';
 		}
 
-		directions_steps = { 1, width, -1, -width };
+		direction_steps = { 1, width, -1, -width };
 	}
 
 	bool is_block(int index)
@@ -78,7 +109,7 @@ struct monkey_map
 			{
 				int total_blocks = 0;
 				int pattern = 0;
-				for (auto& step : directions_steps)
+				for (auto& step : direction_steps)
 				{
 					total_blocks += is_block(i + step);
 				}
@@ -99,13 +130,6 @@ struct monkey_map
 	{
 		return { index % width, index / width };
 	}
-
-	int width;
-	int height;
-	std::string data;
-	std::vector<int> directions_steps;
-
-	std::map<int, wormhole> wormholes;
 };
 
 struct cursor
@@ -114,7 +138,7 @@ struct cursor
 		: map { map }
 	{
 		index = map.data.find_first_of('.');
-		step = map.directions_steps[direction];
+		step = map.direction_steps[direction];
 	}
 
 	void move(int count)
@@ -145,7 +169,7 @@ struct cursor
 		{
 			auto& wormhole = map.wormholes[index];
 			rotate_direction(direction, wormhole.rotation);
-			index += map.directions_steps[direction];
+			index += map.direction_steps[direction];
 		}
 		else
 		{
@@ -165,12 +189,12 @@ struct cursor
 	void rotate(int rotation)
 	{
 		rotate_direction(direction, rotation);
-		step = map.directions_steps[direction];
+		step = map.direction_steps[direction];
 	}
 
 	void draw_self()
 	{
-		//map.data[index] = direction_arrows[direction];
+		map.data[index] = direction_arrows[direction];
 	}
 
 	int index;
@@ -184,7 +208,7 @@ struct face;
 struct link
 {
 	link()
-		: target(reinterpret_cast<face&>(*this))
+		: target(reinterpret_cast<face&>(*this)) // garbage, will be overriden
 		, direction{ 0 }
 	{
 	}
@@ -218,11 +242,11 @@ struct face
 		return -1;
 	}
 
-	int index;
+	int index = 0;
 	std::vector<link> links;
 
-	int unwrap_index = 0;
-	int unwrap_rotation = 0;
+	int net_index = 0;
+	int net_rotation = 0;
 };
 
 /*                                           
@@ -292,12 +316,12 @@ std::vector<std::string> filter_minimap_lines(std::vector<std::string>& lines, i
 	return result;
 }
 
-void find_unwrap_locations(cube& cube, monkey_map& minimap)
+void find_net_locations(cube& cube, monkey_map& minimap)
 {
 	int index = minimap.data.find_first_of('#');
 	
 	face& start_face = cube.faces[0];
-	start_face.unwrap_index = index;
+	start_face.net_index = index;
 	minimap.data[index] = start_face.index + '0';
 
 	using face_vector = std::vector<std::reference_wrapper<face>>;
@@ -308,22 +332,22 @@ void find_unwrap_locations(cube& cube, monkey_map& minimap)
 
 		for (face& cur_face : front)
 		{
-			for (int unwrap_direction = 0; unwrap_direction < direction_count; unwrap_direction++)
+			for (int net_direction = 0; net_direction < direction_count; net_direction++)
 			{
-				auto step = minimap.directions_steps[unwrap_direction];
-				int new_index = cur_face.unwrap_index + step;
+				auto step = minimap.direction_steps[net_direction];
+				int new_index = cur_face.net_index + step;
 				if (minimap.data[new_index] == '#')
 				{
-					auto face_direction = wrap(unwrap_direction - cur_face.unwrap_rotation);
+					auto face_direction = wrap(net_direction - cur_face.net_rotation);
 					auto& link = cur_face.links[face_direction];
 					face& new_face = link.target;
 					minimap.data[new_index] = new_face.index + '0';
 
 					auto backward_direction = new_face.get_direction(cur_face);
-					auto unwrap_backward_direction = wrap(unwrap_direction + 2);
+					auto net_backward_direction = wrap(net_direction + 2);
 
-					new_face.unwrap_rotation = wrap(unwrap_backward_direction - backward_direction);
-					new_face.unwrap_index = new_index;
+					new_face.net_rotation = wrap(net_backward_direction - backward_direction);
+					new_face.net_index = new_index;
 					
 					new_faces.push_back(new_face);
 				}
@@ -335,17 +359,18 @@ void find_unwrap_locations(cube& cube, monkey_map& minimap)
 	}
 }
 
-void solve_cube_wormholes(monkey_map& map, std::vector<std::string>& lines, int resolution)
+void solve_cube_wormholes(monkey_map& map, std::vector<std::string>& lines)
 {
 	cube cube;
 
+	int resolution = detect_resolution(lines);
 	auto minimap_input_lines = filter_minimap_lines(lines, resolution);
 	monkey_map minimap(minimap_input_lines, true);
-	find_unwrap_locations(cube, minimap);
+	find_net_locations(cube, minimap);
 
 	for (auto& face : cube.faces)
 	{
-		std::cout << "face" << face.index << " rotated " << -face.unwrap_rotation * 90 << " degree\n";
+		std::cout << "face" << face.index << " rotated " << -face.net_rotation * 90 << " degree\n";
 	}
 	std::cout << std::endl << minimap.data;
 }
@@ -360,8 +385,7 @@ puzzle<22> X = [](input& input) -> output
 	
 	if (input.is_part_two())
 	{
-		int resolution = input.is_test ? 4 : 50;
-		solve_cube_wormholes(map, input.lines, resolution);
+		solve_cube_wormholes(map, input.lines);
 
 		return 0;
 	}
