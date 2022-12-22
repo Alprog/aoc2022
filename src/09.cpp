@@ -47,7 +47,7 @@ puzzle<9> X = [](input& input) -> output
 		
 		for (int i = 0; i < count; i++)
 		{
-			head = head + offset;
+			head += offset;
 
 			for (int j = 1; j < knot_count; j++)
 			{

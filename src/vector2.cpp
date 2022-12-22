@@ -12,6 +12,36 @@ vector2 vector2::operator-(const vector2& rhs)
 	return { x - rhs.x, y - rhs.y };
 }
 
+vector2 vector2::operator*(const int value)
+{
+	return { x * value, y * value };
+}
+
+vector2 vector2::operator/(const int value)
+{
+	return { x / value, y / value };
+}
+
+vector2& vector2::operator+=(const vector2& rhs)
+{
+	x += rhs.x;	y += rhs.y;	return *this;
+}
+
+vector2& vector2::operator-=(const vector2& rhs)
+{
+	x -= rhs.x;	y -= rhs.y;	return *this;
+}
+
+vector2& vector2::operator*=(const int value)
+{
+	x *= value; y *= value;	return *this;
+}
+
+vector2& vector2::operator/=(const int value)
+{
+	x /= value;	y /= value;	return *this;
+}
+
 int vector2::get_manhattan_size() const
 {
 	return std::abs(x) + std::abs(y);

@@ -9,6 +9,13 @@ struct vector2
 
 	vector2 operator+(const vector2& rhs);
 	vector2 operator-(const vector2& rhs);
+	vector2 operator*(const int value);
+	vector2 operator/(const int value);
+
+	vector2& operator+=(const vector2& rhs);
+	vector2& operator-=(const vector2& rhs);
+	vector2& operator*=(const int value);
+	vector2& operator/=(const int value);
 
 	int get_manhattan_size() const;
 

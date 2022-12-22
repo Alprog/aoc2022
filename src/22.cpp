@@ -92,35 +92,6 @@ struct monkey_map
 		direction_steps = { 1, width, -1, -width };
 	}
 
-	bool is_block(int index)
-	{
-		if (index >= 0 && index < data.size())
-		{
-			return data[index] != ' ' && data[index] != '$';
-		}
-		return false;
-	}
-
-	void find_corners()
-	{
-		for (int i = 0; i < data.size(); i++)
-		{
-			if (data[i] == ' ')
-			{
-				int total_blocks = 0;
-				int pattern = 0;
-				for (auto& step : direction_steps)
-				{
-					total_blocks += is_block(i + step);
-				}
-				if (total_blocks >= 2)
-				{
-					data[i] = '$';
-				}
-			}
-		}
-	}
-
 	int to_index(vector2 position)
 	{
 		return position.x + position.y * width;
@@ -245,7 +216,8 @@ struct face
 	int index = 0;
 	std::vector<link> links;
 
-	int net_index = 0;
+	int minimap_index = 0;
+	vector2 net_position;
 	int net_rotation = 0;
 };
 
@@ -264,12 +236,6 @@ struct face
 	  |     |
 	  +-----+
 */
-
-void connect_faces(face& face_a, face& face_b, int forward, int backward)
-{
-	face_a.links[forward] = link(face_b, wrap(backward + 2));
-	face_b.links[backward] = link(face_a, wrap(forward + 2));
-}
 
 struct cube
 {
@@ -299,6 +265,12 @@ struct cube
 		connect_faces(faces[2], faces[5], down, right);
 		connect_faces(faces[3], faces[5], down, down);
 	}
+
+	static void connect_faces(face& face_a, face& face_b, int forward, int backward)
+	{
+		face_a.links[forward] = link(face_b, wrap(backward + 2));
+		face_b.links[backward] = link(face_a, wrap(forward + 2));
+	}
 };
 
 std::vector<std::string> filter_minimap_lines(std::vector<std::string>& lines, int resolution)
@@ -321,7 +293,7 @@ void find_net_locations(cube& cube, monkey_map& minimap)
 	int index = minimap.data.find_first_of('#');
 	
 	face& start_face = cube.faces[0];
-	start_face.net_index = index;
+	start_face.minimap_index = index;
 	minimap.data[index] = start_face.index + '0';
 
 	using face_vector = std::vector<std::reference_wrapper<face>>;
@@ -335,19 +307,19 @@ void find_net_locations(cube& cube, monkey_map& minimap)
 			for (int net_direction = 0; net_direction < direction_count; net_direction++)
 			{
 				auto step = minimap.direction_steps[net_direction];
-				int new_index = cur_face.net_index + step;
+				int new_index = cur_face.minimap_index + step;
 				if (minimap.data[new_index] == '#')
 				{
 					auto face_direction = wrap(net_direction - cur_face.net_rotation);
 					auto& link = cur_face.links[face_direction];
 					face& new_face = link.target;
+					new_face.minimap_index = new_index;
 					minimap.data[new_index] = new_face.index + '0';
 
 					auto backward_direction = new_face.get_direction(cur_face);
 					auto net_backward_direction = wrap(net_direction + 2);
 
 					new_face.net_rotation = wrap(net_backward_direction - backward_direction);
-					new_face.net_index = new_index;
 					
 					new_faces.push_back(new_face);
 				}
@@ -356,6 +328,32 @@ void find_net_locations(cube& cube, monkey_map& minimap)
 
 		front.clear();
 		std::swap(front, new_faces);
+	}
+
+	for (auto& face : cube.faces)
+	{
+		face.net_position = minimap.to_position(face.minimap_index); 
+	}
+}
+
+void convert_net_position(cube& cube, int resolution)
+{
+	// convert positions from minimap to large mapn
+	for (auto& face : cube.faces)
+	{
+		face.net_position -= vector2(1, 1); // remove sentinel
+		face.net_position *= resolution;
+		face.net_position += vector2(1, 1); // add sentinel
+	}
+}
+
+void setup_wormholes(cube& cube, monkey_map& map, int resolution)
+{
+	for (auto& face : cube.faces)
+	{
+		auto start_pos = face.net_position;
+		map.data[map.to_index(start_pos)] = '$';
+		
 	}
 }
 
@@ -367,16 +365,21 @@ void solve_cube_wormholes(monkey_map& map, std::vector<std::string>& lines)
 	auto minimap_input_lines = filter_minimap_lines(lines, resolution);
 	monkey_map minimap(minimap_input_lines, true);
 	find_net_locations(cube, minimap);
+	convert_net_position(cube, resolution);
+	setup_wormholes(cube, map, resolution);
 
-	for (auto& face : cube.faces)
-	{
-		std::cout << "face" << face.index << " rotated " << -face.net_rotation * 90 << " degree\n";
-	}
-	std::cout << std::endl << minimap.data;
+	//for (auto& face : cube.faces)
+	//{
+	//	std::cout << "face" << face.index << " rotated " << -face.net_rotation * 90 << " degree\n";
+	//}
+	//std::cout << std::endl << minimap.data;
 }
 
 puzzle<22> X = [](input& input) -> output
 {
+	if (!input.is_test)
+		return 0;
+
 	std::string sequence = input.lines.back();
 	input.lines.resize(input.lines.size() - 2);
 
@@ -387,6 +390,7 @@ puzzle<22> X = [](input& input) -> output
 	{
 		solve_cube_wormholes(map, input.lines);
 
+		std::cout << map.data;
 		return 0;
 	}
 
