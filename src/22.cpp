@@ -20,6 +20,11 @@ int wrap(int direction)
 	return (direction + direction_count) % direction_count;
 }
 
+int invert(int direction)
+{
+	return wrap(direction + 2);
+}
+
 int get_max_line_size(std::vector<std::string>& lines)
 {
 	size_t max = 0;
@@ -51,8 +56,10 @@ int detect_resolution(std::vector<std::string>& lines)
 
 struct wormhole
 {
-	int destination;
-	int rotation;
+	int destinationA;
+	int directionA;
+	int destinationB;
+	int directionB;
 };
 
 struct monkey_map
@@ -101,6 +108,21 @@ struct monkey_map
 	{
 		return { index % width, index / width };
 	}
+
+	void add_wormhole(int place, int destination, int direction)
+	{
+		auto it = wormholes.find(place);
+		if (it != wormholes.end())
+		{
+			wormholes[place] = { destination, direction };
+		}
+		else
+		{
+			// alternative path
+			it->second.destinationB = destination;
+			it->second.directionB = direction;
+		}
+	}
 };
 
 struct cursor
@@ -109,47 +131,53 @@ struct cursor
 		: map { map }
 	{
 		index = map.data.find_first_of('.');
-		step = map.direction_steps[direction];
 	}
 
 	void move(int count)
 	{
+		int step = map.direction_steps[direction];
+
 		for (int i = 0; i < count; i++)
 		{
 			int new_index = index + step;
 			int new_direction = direction;
 			if (map.data[new_index] == ' ')
 			{
-				teleport(new_index, new_direction);
+				new_index = pacman_teleport(new_index, step);
 			}
+			else if (map.data[new_index] == '@')
+			{
+				auto& wormhole = map.wormholes[index];
+				if (wormhole.destinationA != index)
+				{
+					new_index = wormhole.destinationA;
+					new_direction = wormhole.directionA;
+				}
+				else
+				{
+					new_index = wormhole.destinationB;
+					new_direction = wormhole.directionB;
+				}
+			}
+
 			if (map.data[new_index] == '#')
 			{
 				break;
 			}
-			else
-			{
-				draw_self();
-				index = new_index;
-			}
+
+			draw_self();
+			index = new_index;
+			direction = new_direction;
 		}
 	}
 
-	void teleport(int& index, int& direction)
+	int pacman_teleport(int index, int step)
 	{
-		if (map.wormholes.size() > 0)
+		do
 		{
-			auto& wormhole = map.wormholes[index];
-			rotate_direction(direction, wormhole.rotation);
-			index += map.direction_steps[direction];
-		}
-		else
-		{
-			do
-			{
-				index -= step;
-			} while (map.data[index] != ' ');
-			index += step;
-		}
+			index -= step;
+		} while (map.data[index] != ' ');
+		return index + step;
 	}
 
 	void rotate_direction(int& direction, int rotation)
@@ -160,7 +188,6 @@ struct cursor
 	void rotate(int rotation)
 	{
 		rotate_direction(direction, rotation);
-		step = map.direction_steps[direction];
 	}
 
 	void draw_self()
@@ -171,7 +198,6 @@ struct cursor
 	int index;
 	int direction = 0;
 	monkey_map& map;
-	int step;
 };
 
 struct face;
@@ -219,6 +245,7 @@ struct face
 	int minimap_index = 0;
 	vector2 net_position;
 	int net_rotation = 0;
+	std::vector<int> edge_anchors;
 };
 
 /*                                           
@@ -268,8 +295,8 @@ struct cube
 
 	static void connect_faces(face& face_a, face& face_b, int forward, int backward)
 	{
-		face_a.links[forward] = link(face_b, wrap(backward + 2));
-		face_b.links[backward] = link(face_a, wrap(forward + 2));
+		face_a.links[forward] = link(face_b, invert(backward));
+		face_b.links[backward] = link(face_a, invert(forward));
 	}
 };
 
@@ -317,7 +344,7 @@ void find_net_locations(cube& cube, monkey_map& minimap)
 					minimap.data[new_index] = new_face.index + '0';
 
 					auto backward_direction = new_face.get_direction(cur_face);
-					auto net_backward_direction = wrap(net_direction + 2);
+					auto net_backward_direction = invert(net_direction);
 
 					new_face.net_rotation = wrap(net_backward_direction - backward_direction);
 					
@@ -336,24 +363,67 @@ void find_net_locations(cube& cube, monkey_map& minimap)
 	}
 }
 
-void convert_net_position(cube& cube, int resolution)
+void calculate_edge_anchors(cube& cube, monkey_map& map, int resolution)
 {
-	// convert positions from minimap to large mapn
 	for (auto& face : cube.faces)
 	{
-		face.net_position -= vector2(1, 1); // remove sentinel
-		face.net_position *= resolution;
-		face.net_position += vector2(1, 1); // add sentinel
+		// convert positions from minimap to large map
+		auto map_position = face.net_position;
+		map_position -= vector2(1, 1); // remove sentinel
+		map_position *= resolution;
+		map_position += vector2(1, 1); // add sentinel
+	
+		auto add_anchor = [&](int x, int y) 
+		{
+			auto anchor_position = map_position + vector2{ x, y };
+			face.edge_anchors.push_back(map.to_index(anchor_position));
+		};
+
+		add_anchor(resolution, 0);
+		add_anchor(resolution - 1, resolution);
+		add_anchor(-1, resolution - 1);
+		add_anchor(0, -1);
 	}
 }
 
 void setup_wormholes(cube& cube, monkey_map& map, int resolution)
 {
-	for (auto& face : cube.faces)
-	{
-		auto start_pos = face.net_position;
-		map.data[map.to_index(start_pos)] = '$';
-		
+	int global = '0';
+
+	for (auto& src_face : cube.faces)
+	{	
+		for (int src_net_edge = 0; src_net_edge < direction_count; src_net_edge++)
+		{
+			auto& src_anchor = src_face.edge_anchors[src_net_edge];
+			if (map.data[src_anchor] == ' ')
+			{
+				auto src_local_direction = wrap(src_net_edge - src_face.net_rotation);
+				auto& link = src_face.links[src_local_direction];
+				face& dst_face = link.target;
+				
+				auto dst_local_direction = invert(link.direction);
+				auto dst_net_edge = wrap(dst_local_direction - dst_face.net_rotation);
+				
+				auto src_step = map.direction_steps[wrap(src_net_edge + 1)];
+				auto dst_step = map.direction_steps[wrap(dst_net_edge + 1)];
+
+				auto dst_anchor = dst_face.edge_anchors[dst_net_edge];
+				dst_anchor += (resolution - 1) * dst_step;
+
+				auto dst_net_direction = invert(dst_net_edge);
+				dst_anchor += map.direction_steps[dst_net_direction];
+
+				for (int i = 0; i < resolution; i++)
+				{
+					map.data[src_anchor + i * src_step] = global;
+					map.data[dst_anchor - i * dst_step] = global++;
+				}
+
+				
+			}
+		}
+
+		break;
 	}
 }
 
@@ -365,14 +435,14 @@ void solve_cube_wormholes(monkey_map& map, std::vector<std::string>& lines)
 	auto minimap_input_lines = filter_minimap_lines(lines, resolution);
 	monkey_map minimap(minimap_input_lines, true);
 	find_net_locations(cube, minimap);
-	convert_net_position(cube, resolution);
+	calculate_edge_anchors(cube, map, resolution);
 	setup_wormholes(cube, map, resolution);
 
 	//for (auto& face : cube.faces)
 	//{
 	//	std::cout << "face" << face.index << " rotated " << -face.net_rotation * 90 << " degree\n";
 	//}
-	//std::cout << std::endl << minimap.data;
+	std::cout << std::endl << minimap.data;
 }
 
 puzzle<22> X = [](input& input) -> output
@@ -390,7 +460,7 @@ puzzle<22> X = [](input& input) -> output
 	{
 		solve_cube_wormholes(map, input.lines);
 
-		std::cout << map.data;
+		std::cout << std::endl << map.data;
 		return 0;
 	}
 
