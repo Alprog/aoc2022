@@ -388,8 +388,6 @@ void calculate_edge_anchors(cube& cube, monkey_map& map, int resolution)
 
 void setup_wormholes(cube& cube, monkey_map& map, int resolution)
 {
-	int global = 'a';
-
 	for (auto& src_face : cube.faces)
 	{	
 		for (int src_net_edge = 0; src_net_edge < direction_count; src_net_edge++)
@@ -436,7 +434,7 @@ void solve_cube_wormholes(monkey_map& map, std::vector<std::string>& lines)
 	setup_wormholes(cube, map, resolution);
 
 	//uncomment to print minimap
-	//std::cout << std::endl << minimap.data;
+	std::cout << std::endl << minimap.data;
 }
 
 puzzle<22> X = [](input& input) -> output
