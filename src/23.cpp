@@ -171,6 +171,7 @@ bool perform_round(std::vector<elf>& elves, int round)
 			elf.make_proposal(round);
 		}
 	}
+
 	for (auto& elf : elves)
 	{
 		elf.make_movement();
@@ -207,7 +208,7 @@ puzzle<23, 1> X = [](input& input) -> output
 puzzle<23, 2> X = [](input& input) -> output
 {
 	auto max_side = std::max(input.lines.front().size(), input.lines.size());
-	grove_map map(input.lines, max_side / 2 + 1);
+	grove_map map(input.lines, max_side / 2 + 1); // should be enough to stop + sentinel
 	std::vector<elf> elves = get_elves(map);
 
 	int round = 0;
