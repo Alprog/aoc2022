@@ -160,25 +160,33 @@ std::vector<elf> get_elves(grove_map& map)
 	return elves;
 }
 
+bool perform_round(std::vector<elf>& elves, int round)
+{
+	bool need_move = false;
+	for (auto& elf : elves)
+	{
+		if (elf.need_move())
+		{
+			need_move = true;
+			elf.make_proposal(round);
+		}
+	}
+	for (auto& elf : elves)
+	{
+		elf.make_movement();
+	}
+	return need_move;
+}
+
 puzzle<23, 1> X = [](input& input) -> output
 {
-	grove_map map(input.lines, 11);
+	constexpr int round_count = 10;
 
+	grove_map map(input.lines, round_count + 1);
 	std::vector<elf> elves = get_elves(map);
-
-	for (int round = 0; round < 10; round++)
+	for (int i = 0; i < round_count; i++)
 	{
-		for (auto& elf : elves)
-		{
-			if (elf.need_move())
-			{
-				elf.make_proposal(round);
-			}
-		}
-		for (auto& elf : elves)
-		{
-			elf.make_movement();
-		}
+		perform_round(elves, i);
 	}
 
 	auto min = vector2{ map.width, map.height };
@@ -198,30 +206,10 @@ puzzle<23, 1> X = [](input& input) -> output
 
 puzzle<23, 2> X = [](input& input) -> output
 {
-	grove_map map(input.lines, 100);
-
+	grove_map map(input.lines, 100); // just big enough
 	std::vector<elf> elves = get_elves(map);
 
-	bool need_move = true;
 	int round = 0;
-	while (need_move)
-	{
-		need_move = false;
-		for (auto& elf : elves)
-		{
-			if (elf.need_move())
-			{
-				need_move = true;
-				elf.make_proposal(round);
-			}
-		}
-		for (auto& elf : elves)
-		{
-			elf.make_movement();
-		}
-
-		round++;
-	}
-
+	while (perform_round(elves, round++)) {}
 	return round;
 };
