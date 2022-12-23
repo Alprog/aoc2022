@@ -206,7 +206,8 @@ puzzle<23, 1> X = [](input& input) -> output
 
 puzzle<23, 2> X = [](input& input) -> output
 {
-	grove_map map(input.lines, 100); // just big enough
+	auto max_side = std::max(input.lines.front().size(), input.lines.size());
+	grove_map map(input.lines, max_side / 2 + 1);
 	std::vector<elf> elves = get_elves(map);
 
 	int round = 0;
