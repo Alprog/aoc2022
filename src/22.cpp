@@ -434,7 +434,7 @@ void solve_cube_wormholes(monkey_map& map, std::vector<std::string>& lines)
 	setup_wormholes(cube, map, resolution);
 
 	//uncomment to print minimap
-	std::cout << std::endl << minimap.data;
+	//std::cout << std::endl << minimap.data;
 }
 
 puzzle<22> X = [](input& input) -> output

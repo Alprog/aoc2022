@@ -51,8 +51,7 @@ puzzle<15, 1> X = [](input& input) -> output
 		beacons.insert(beacon_position);
 	}
 
-	//constexpr int target_row = 10;
-	constexpr int target_row = 2000000;
+	int target_row = input.is_part_one() ? 10 : 2000000;
 
 	std::vector<range> ranges;
 	for (auto& signal : signals)
@@ -113,7 +112,7 @@ puzzle<15, 2> X = [](input& input) -> output
 		beacons.insert(beacon_position);
 	}
 
-	constexpr int max_line = 4000000;
+	int max_line = input.is_part_one() ? 20 : 4000000;
 
 	vector2 searched_position;
 	
