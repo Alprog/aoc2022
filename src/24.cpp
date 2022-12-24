@@ -126,7 +126,7 @@ struct node
 
 struct comparator
 {
-	bool operator()(const node* lhs, const node* rhs) const 
+	bool operator()(const std::shared_ptr<node> lhs, const std::shared_ptr<node> rhs) const
 	{
 		return lhs->priority > rhs->priority;
 	}
@@ -135,8 +135,8 @@ struct comparator
 struct game
 {
 	blizzard_map& map;
-	std::unordered_map<int, node*> nodes;
-	binary_heap<node*, comparator> heap;
+	std::unordered_map<int, std::shared_ptr<node>> nodes;
+	binary_heap<std::shared_ptr<node>, comparator> heap;
 
 	void clear()
 	{
@@ -190,7 +190,7 @@ void node::try_open(int x, int y, int round)
 			}
 		}
 
-		auto new_node = new node(game, x, y, round, cost + 1);
+		auto new_node = std::make_shared<node>(game, x, y, round, cost + 1);
 		game.nodes[index] = new_node;
 		game.heap.push(new_node);
 	}
@@ -201,7 +201,7 @@ int solve_trip(game& game, int start_round)
 	start_round = start_round % game.map.round_count;
 
 	auto pos = game.map.start_position;
-	auto new_node = new node(game, pos.x, pos.y, start_round, 0);
+	auto new_node = std::make_shared<node>(game, pos.x, pos.y, start_round, 0);
 	game.nodes[new_node->get_index()] = new_node;
 	game.heap.push(new_node);
 
